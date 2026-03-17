@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Бонусный раздел — Лаб. №9 Big Data</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    /* ── shared theory/practice styles ── */
+    .pill-list{list-style:none;display:flex;flex-direction:column;gap:8px}
+    .pill-list li{display:flex;gap:10px;align-items:flex-start;font-size:.92rem;color:var(--text-m)}
+    .pill-list li::before{content:'▸';color:var(--cyan);flex-shrink:0;margin-top:1px}
+    .tool-card{background:var(--bg-card2);border:1px solid var(--border);border-radius:var(--r);
+      padding:18px;transition:all .25s}
+    .tool-card:hover{border-color:rgba(59,130,246,.38);background:var(--bg-card3)}
+    .parse-step{display:flex;gap:12px;padding:14px 0;border-bottom:1px solid rgba(255,255,255,.05)}
+    .parse-step:last-child{border-bottom:none}
+    .parse-num{width:28px;height:28px;border-radius:50%;background:rgba(59,130,246,.15);
+      color:var(--primary);font-weight:800;font-size:.85rem;display:flex;
+      align-items:center;justify-content:center;flex-shrink:0;margin-top:2px}
+    .section-divider{height:1px;background:linear-gradient(90deg,transparent,var(--border),transparent);margin:40px 0}
+
+    /* ── API card styles ── */
+    .api-card{background:var(--bg-card2);border:1px solid var(--border);border-radius:var(--r);
+      padding:18px;transition:all .25s;display:flex;flex-direction:column;gap:10px}
+    .api-card:hover{border-color:rgba(59,130,246,.38)}
+    .api-url{font-family:monospace;font-size:.78rem;color:var(--text-d);word-break:break-all;
+      padding:5px 9px;background:rgba(255,255,255,.04);border-radius:6px}
+    .api-run{padding:7px 16px;border-radius:8px;border:1px solid rgba(16,185,129,.4);
+      background:rgba(16,185,129,.1);color:var(--green);cursor:pointer;font-size:.82rem;
+      font-weight:600;font-family:inherit;transition:all .2s;white-space:nowrap;flex-shrink:0}
+    .api-run:hover{background:rgba(16,185,129,.22);transform:translateY(-1px)}
+    .api-run:disabled{opacity:.45;cursor:not-allowed;transform:none}
+    .api-input{width:100%;padding:6px 10px;border-radius:8px;border:1px solid var(--border);
+      background:rgba(255,255,255,.06);color:var(--text);font-family:monospace;font-size:.82rem;
+      outline:none;transition:border-color .2s;box-sizing:border-box}
+    .api-input:focus{border-color:rgba(59,130,246,.55);background:rgba(255,255,255,.09)}
+    .api-select{width:100%;padding:6px 10px;border-radius:8px;border:1px solid var(--border);
+      background:var(--bg-card2);color:var(--text);font-family:inherit;font-size:.82rem;
+      outline:none;cursor:pointer;transition:border-color .2s}
+    .api-select:focus{border-color:rgba(59,130,246,.55)}
+    .api-helper{font-size:.76rem;color:var(--text-d);margin-top:-4px}
+
+    /* ── Полный JSON — без ограничения по высоте ── */
+    .api-result{
+      background:#0d1117;border:1px solid rgba(255,255,255,.07);border-radius:8px;
+      padding:12px 14px;font-family:monospace;font-size:.82rem;color:#e6edf3;
+      line-height:1.65;max-height:520px;overflow-y:auto;display:none;word-break:break-all;
+      white-space:pre-wrap
+    }
+    .api-result.show{display:block;animation:fadeIn .3s ease}
+
+    /* ── Code editor blocks ── */
+    .code-editor{background:#0d1117;border-radius:var(--r);overflow:hidden;border:1px solid rgba(255,255,255,.07)}
+    .code-header{display:flex;align-items:center;gap:8px;padding:10px 14px;
+      background:rgba(255,255,255,.04);border-bottom:1px solid rgba(255,255,255,.07)}
+    .code-dots{display:flex;gap:5px;flex-shrink:0}
+    .code-dot{width:11px;height:11px;border-radius:50%}
+    .code-dot.r{background:#ff5f57}.code-dot.y{background:#febc2e}.code-dot.g{background:#28c840}
+    .code-lang{font-size:.8rem;color:var(--text-d);font-family:monospace}
+  </style>
+</head>
+<body class="page">
+
+<!-- ── TOP NAV ── -->
+<nav class="top-nav">
+  <a href="index.html" class="nav-brand" style="text-decoration:none">⚡ BigData Lab</a>
+  <div class="nav-steps">
+    <a href="index.html"  class="nav-step done" title="Введение">✓</a>
+    <div class="nav-conn"></div>
+    <a href="learn.html"  class="nav-step done" title="Теория + Практика">✓</a>
+    <div class="nav-conn"></div>
+    <a href="quiz.html"   class="nav-step done" title="Тест">✓</a>
+    <div class="nav-conn"></div>
+    <a href="results.html" class="nav-step done" title="Результаты">✓</a>
+    <div class="nav-conn"></div>
+    <div class="nav-step active" title="Бонус">5</div>
+  </div>
+  <div class="nav-spacer"></div>
+</nav>
+
+<div class="container" style="padding-top:32px;padding-bottom:72px">
+
+  <!-- Page header -->
+  <div style="margin-bottom:32px" class="anim">
+    <div class="section-label">Шаг 5 / 5</div>
+    <div class="section-label" style="color:var(--purple);margin-top:4px">Бонусный раздел</div>
+    <h1 class="section-title" style="margin-top:10px">Открытые API + Web Scraping</h1>
+    <p class="section-sub">Живые запросы к публичным API без токенов, основы парсинга и практические сценарии сбора данных с реальных сайтов.</p>
+  </div>
+
+  <!-- ═══ OPEN APIs ═══ -->
+  <div style="font-weight:700;margin-bottom:8px;font-size:1.1rem">🌍 Открытые API без регистрации</div>
+  <p style="font-size:.88rem;color:var(--text-m);margin-bottom:20px">
+    Нажми <b>«▶ Запрос»</b> — данные придут в реальном времени (live fetch).<br>
+    В этом разделе отображается <b>полный JSON-ответ</b> без обрезки — удобно для изучения структуры данных и написания парсера.
+  </p>
+
+  <div class="card-grid" style="margin-bottom:32px">
+
+    <!-- JSONPlaceholder -->
+    <div class="api-card">
+      <div style="font-weight:700">📝 JSONPlaceholder</div>
+      <div style="font-size:.82rem;color:var(--text-m)">Фейковый REST API для тестирования.</div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="font-size:.82rem;color:var(--text-m);white-space:nowrap">Пользователь #</span>
+        <input type="number" class="api-input" id="inp-jp" min="1" max="10" value="1"
+          style="width:68px;flex-shrink:0"
+          oninput="updateJpUrl()" onkeydown="if(event.key==='Enter')callUser()">
+        <span class="api-helper">(1 – 10)</span>
+      </div>
+      <div class="api-url" id="url-jp">https://jsonplaceholder.typicode.com/users/1</div>
+      <button class="api-run" id="btn-jp" onclick="callUser()">▶ Запрос</button>
+      <pre class="api-result" id="res-jp"></pre>
+    </div>
+
+    <!-- REST Countries -->
+    <div class="api-card" style="border-color:rgba(16,185,129,.3)">
+      <div style="font-weight:700">🌍 REST Countries</div>
+      <div style="font-size:.82rem;color:var(--text-m)">Данные о странах: население, языки, валюта.</div>
+      <input class="api-input" id="inp-rc" list="countries-list"
+        placeholder="Введи страну на английском (напр. germany)" value="russia"
+        oninput="updateCountryUrl()" onkeydown="if(event.key==='Enter')callCountry()">
+      <datalist id="countries-list">
+        <option value="russia"><option value="germany"><option value="france">
+        <option value="usa"><option value="china"><option value="japan">
+        <option value="brazil"><option value="india"><option value="australia">
+        <option value="canada"><option value="italy"><option value="spain">
+        <option value="turkey"><option value="argentina"><option value="mexico">
+        <option value="kazakhstan"><option value="ukraine"><option value="poland">
+        <option value="netherlands"><option value="sweden"><option value="norway">
+      </datalist>
+      <div class="api-url" id="url-rc">https://restcountries.com/v3.1/name/russia?fields=name,capital,population,languages,currencies</div>
+      <button class="api-run" id="btn-rc" onclick="callCountry()">▶ Запрос</button>
+      <pre class="api-result" id="res-rc"></pre>
+
+      <!-- Пример полного JSON-ответа для Russia -->
+      <details style="margin-top:6px">
+        <summary style="font-size:.8rem;color:var(--text-d);cursor:pointer;user-select:none">
+          📋 Ожидаемая структура ответа (russia)
+        </summary>
+        <pre style="margin-top:8px;background:#0d1117;border:1px solid rgba(255,255,255,.07);border-radius:8px;
+          padding:12px;font-size:.79rem;line-height:1.65;overflow-x:auto;color:#e6edf3;white-space:pre-wrap"><span style="color:#80cbc4">"name"</span>: {
+  <span style="color:#80cbc4">"common"</span>: <span style="color:#a5d6a7">"Russia"</span>,
+  <span style="color:#80cbc4">"official"</span>: <span style="color:#a5d6a7">"Russian Federation"</span>,
+  <span style="color:#80cbc4">"nativeName"</span>: {
+    <span style="color:#80cbc4">"rus"</span>: { <span style="color:#80cbc4">"official"</span>: <span style="color:#a5d6a7">"Российская Федерация"</span>, <span style="color:#80cbc4">"common"</span>: <span style="color:#a5d6a7">"Россия"</span> }
+  }
+},
+<span style="color:#80cbc4">"capital"</span>: [ <span style="color:#a5d6a7">"Moscow"</span> ],
+<span style="color:#80cbc4">"population"</span>: <span style="color:#f9a825">144104080</span>,
+<span style="color:#80cbc4">"languages"</span>: { <span style="color:#80cbc4">"rus"</span>: <span style="color:#a5d6a7">"Russian"</span> },
+<span style="color:#80cbc4">"currencies"</span>: {
+  <span style="color:#80cbc4">"RUB"</span>: { <span style="color:#80cbc4">"name"</span>: <span style="color:#a5d6a7">"Russian ruble"</span>, <span style="color:#80cbc4">"symbol"</span>: <span style="color:#a5d6a7">"₽"</span> }
+}</pre>
+      </details>
+    </div>
+
+    <!-- PokéAPI -->
+    <div class="api-card">
+      <div style="font-weight:700">⚡ PokéAPI</div>
+      <div style="font-size:.82rem;color:var(--text-m)">800+ покемонов: статы, типы, способности.</div>
+      <input class="api-input" id="inp-pk" list="pokemon-list"
+        placeholder="Введи имя или ID покемона" value="pikachu"
+        oninput="updatePokemonUrl()" onkeydown="if(event.key==='Enter')callPokemon()">
+      <datalist id="pokemon-list">
+        <option value="pikachu"><option value="charizard"><option value="bulbasaur">
+        <option value="squirtle"><option value="mewtwo"><option value="gengar">
+        <option value="snorlax"><option value="eevee"><option value="lucario">
+        <option value="garchomp"><option value="arcanine"><option value="dragonite">
+      </datalist>
+      <div class="api-url" id="url-pk">https://pokeapi.co/api/v2/pokemon/pikachu</div>
+      <button class="api-run" id="btn-pk" onclick="callPokemon()">▶ Запрос</button>
+      <pre class="api-result" id="res-pk"></pre>
+    </div>
+
+    <!-- Open-Meteo -->
+    <div class="api-card">
+      <div style="font-weight:700">🌤️ Open-Meteo</div>
+      <div style="font-size:.82rem;color:var(--text-m)">Прогноз погоды — бесплатный, без ключа.</div>
+      <select class="api-select" id="sel-wt" onchange="updateWeatherUrl()">
+        <option value="55.75,37.62">🇷🇺 Москва</option>
+        <option value="59.93,30.32">🇷🇺 Санкт-Петербург</option>
+        <option value="55.0,73.4">🇷🇺 Омск</option>
+        <option value="51.51,-0.13">🇬🇧 Лондон</option>
+        <option value="48.85,2.35">🇫🇷 Париж</option>
+        <option value="52.52,13.4">🇩🇪 Берлин</option>
+        <option value="40.71,-74.01">🇺🇸 Нью-Йорк</option>
+        <option value="34.05,-118.24">🇺🇸 Лос-Анджелес</option>
+        <option value="35.68,139.69">🇯🇵 Токио</option>
+        <option value="39.91,116.39">🇨🇳 Пекин</option>
+        <option value="43.24,76.92">🇰🇿 Алматы</option>
+        <option value="41.29,69.24">🇺🇿 Ташкент</option>
+        <option value="51.18,71.45">🇰🇿 Астана</option>
+        <option value="-33.87,151.21">🇦🇺 Сидней</option>
+        <option value="-23.55,-46.63">🇧🇷 Сан-Паулу</option>
+        <option value="28.61,77.21">🇮🇳 Нью-Дели</option>
+        <option value="25.2,55.27">🇦🇪 Дубай</option>
+      </select>
+      <div class="api-url" id="url-wt">https://api.open-meteo.com/v1/forecast?latitude=55.75&amp;longitude=37.62&amp;current_weather=true</div>
+      <button class="api-run" id="btn-wt" onclick="callWeather()">▶ Запрос</button>
+      <pre class="api-result" id="res-wt"></pre>
+    </div>
+
+    <!-- Cat Facts -->
+    <div class="api-card">
+      <div style="font-weight:700">🐱 Cat Facts</div>
+      <div style="font-size:.82rem;color:var(--text-m)">Случайный факт о кошках (JSON).</div>
+      <div class="api-url">https://catfact.ninja/fact</div>
+      <button class="api-run" id="btn-cf" onclick="callApi('cf','https://catfact.ninja/fact')">▶ Запрос</button>
+      <pre class="api-result" id="res-cf"></pre>
+    </div>
+
+    <!-- Hacker News -->
+    <div class="api-card">
+      <div style="font-weight:700">📰 Hacker News</div>
+      <div style="font-size:.82rem;color:var(--text-m)">IT-новость в реальном времени.</div>
+      <div class="api-url">https://hacker-news.firebaseio.com/v0/item/1.json</div>
+      <button class="api-run" id="btn-hn" onclick="callApi('hn','https://hacker-news.firebaseio.com/v0/item/1.json')">▶ Запрос</button>
+      <pre class="api-result" id="res-hn"></pre>
+    </div>
+
+  </div><!-- /card-grid -->
+
+  <div class="section-divider"></div>
+
+  <!-- ═══ WEB SCRAPING BASICS ═══ -->
+  <div style="font-weight:700;margin-bottom:14px;font-size:1.05rem">🕷️ Основы Web Scraping</div>
+  <p style="font-size:.88rem;color:var(--text-m);margin-bottom:20px">Когда API нет — данные можно извлечь из HTML-страниц. Вот базовый пайплайн:</p>
+
+  <div class="card" style="margin-bottom:20px">
+    <div class="parse-step">
+      <div class="parse-num">1</div>
+      <div>
+        <div style="font-weight:700;margin-bottom:4px">Отправить HTTP-запрос</div>
+        <div style="font-size:.85rem;color:var(--text-m)"><code>requests.get(url)</code> → получить HTML-код страницы</div>
+      </div>
+    </div>
+    <div class="parse-step">
+      <div class="parse-num">2</div>
+      <div>
+        <div style="font-weight:700;margin-bottom:4px">Парсинг HTML</div>
+        <div style="font-size:.85rem;color:var(--text-m)"><code>BeautifulSoup(html, 'html.parser')</code> → дерево DOM</div>
+      </div>
+    </div>
+    <div class="parse-step">
+      <div class="parse-num">3</div>
+      <div>
+        <div style="font-weight:700;margin-bottom:4px">Поиск элементов</div>
+        <div style="font-size:.85rem;color:var(--text-m)"><code>soup.find_all('div', class_='post')</code> → список элементов</div>
+      </div>
+    </div>
+    <div class="parse-step">
+      <div class="parse-num">4</div>
+      <div>
+        <div style="font-weight:700;margin-bottom:4px">Извлечение данных</div>
+        <div style="font-size:.85rem;color:var(--text-m)"><code>el.text</code>, <code>el['href']</code> → текст и атрибуты</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="code-editor" style="margin-bottom:20px">
+    <div class="code-header">
+      <div class="code-dots"><div class="code-dot r"></div><div class="code-dot y"></div><div class="code-dot g"></div></div>
+      <span class="code-lang">scraper.py · BeautifulSoup</span>
+    </div>
+    <pre style="padding:18px;color:#e6edf3;font-size:.84rem;line-height:1.7;overflow-x:auto"><span style="color:#ff7b72">import</span> <span style="color:#79c0ff">requests</span>
+<span style="color:#ff7b72">from</span> <span style="color:#79c0ff">bs4</span> <span style="color:#ff7b72">import</span> <span style="color:#d2a8ff">BeautifulSoup</span>
+
+<span style="color:#8b949e"># 1. Получаем HTML</span>
+<span style="color:#79c0ff">url</span> = <span style="color:#a5d6a7">"https://example.com/news"</span>
+<span style="color:#79c0ff">resp</span> = <span style="color:#79c0ff">requests</span>.<span style="color:#d2a8ff">get</span>(<span style="color:#79c0ff">url</span>)
+
+<span style="color:#8b949e"># 2. Парсим</span>
+<span style="color:#79c0ff">soup</span> = <span style="color:#d2a8ff">BeautifulSoup</span>(<span style="color:#79c0ff">resp</span>.text, <span style="color:#a5d6a7">"html.parser"</span>)
+
+<span style="color:#8b949e"># 3. Ищем все заголовки новостей</span>
+<span style="color:#79c0ff">titles</span> = <span style="color:#79c0ff">soup</span>.<span style="color:#d2a8ff">find_all</span>(<span style="color:#a5d6a7">"h2"</span>, class_=<span style="color:#a5d6a7">"news-title"</span>)
+
+<span style="color:#8b949e"># 4. Извлекаем текст</span>
+<span style="color:#ff7b72">for</span> <span style="color:#79c0ff">t</span> <span style="color:#ff7b72">in</span> <span style="color:#79c0ff">titles</span>:
+    <span style="color:#d2a8ff">print</span>(<span style="color:#79c0ff">t</span>.text.strip())</pre>
+  </div>
+
+  <!-- Cheat sheet -->
+  <div style="font-weight:700;margin-bottom:12px;font-size:.95rem">📋 Шпаргалка методов BeautifulSoup</div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;margin-bottom:28px">
+    <div class="tool-card" style="padding:12px">
+      <code style="color:var(--cyan);font-size:.8rem">soup.find('tag')</code>
+      <div style="font-size:.78rem;color:var(--text-d);margin-top:4px">Первый элемент</div>
+    </div>
+    <div class="tool-card" style="padding:12px">
+      <code style="color:var(--cyan);font-size:.8rem">soup.find_all('tag')</code>
+      <div style="font-size:.78rem;color:var(--text-d);margin-top:4px">Все элементы</div>
+    </div>
+    <div class="tool-card" style="padding:12px">
+      <code style="color:var(--cyan);font-size:.8rem">soup.select('.class')</code>
+      <div style="font-size:.78rem;color:var(--text-d);margin-top:4px">CSS-селектор</div>
+    </div>
+    <div class="tool-card" style="padding:12px">
+      <code style="color:var(--cyan);font-size:.8rem">el.text</code>
+      <div style="font-size:.78rem;color:var(--text-d);margin-top:4px">Текст элемента</div>
+    </div>
+    <div class="tool-card" style="padding:12px">
+      <code style="color:var(--cyan);font-size:.8rem">el['href']</code>
+      <div style="font-size:.78rem;color:var(--text-d);margin-top:4px">Атрибут</div>
+    </div>
+    <div class="tool-card" style="padding:12px">
+      <code style="color:var(--cyan);font-size:.8rem">el.get_text(strip=True)</code>
+      <div style="font-size:.78rem;color:var(--text-d);margin-top:4px">Чистый текст</div>
+    </div>
+  </div>
+
+  <div class="section-divider"></div>
+
+  <!-- ═══ REAL-WORLD SCRAPING ═══ -->
+  <div style="font-weight:700;margin-bottom:6px;font-size:1.05rem">🏗️ Скрейпинг реальных сайтов без API</div>
+  <p style="font-size:.88rem;color:var(--text-m);margin-bottom:20px">
+    Большинство популярных сервисов — <b>риелторские сайты, доски объявлений о работе, маркетплейсы</b> —
+    не предоставляют публичный API. Но данные на них огромны и ценны для исследований, аналитики и ML-моделей.
+  </p>
+
+  <!-- Why not just download everything -->
+  <div class="card" style="margin-bottom:20px;border-color:rgba(245,158,11,.3);background:rgba(245,158,11,.04)">
+    <div style="font-weight:700;margin-bottom:14px;font-size:.97rem;color:var(--amber)">⚠️ Почему нельзя просто скачать всё сразу?</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px">
+      <div style="padding:12px;background:rgba(255,255,255,.04);border-radius:10px;border:1px solid var(--border)">
+        <div style="font-weight:700;margin-bottom:6px;font-size:.88rem">🚦 Rate Limiting</div>
+        <div style="font-size:.82rem;color:var(--text-m)">Сервер считает запросы с одного IP. При превышении порога (~30–100 req/min) — блокировка 429 Too Many Requests или soft-ban на часы/дни.</div>
+      </div>
+      <div style="padding:12px;background:rgba(255,255,255,.04);border-radius:10px;border:1px solid var(--border)">
+        <div style="font-weight:700;margin-bottom:6px;font-size:.88rem">🤖 Anti-bot системы</div>
+        <div style="font-size:.82rem;color:var(--text-m)">Cloudflare, DataDome, PerimeterX анализируют поведение: скорость, порядок запросов, TLS-fingerprint, mouse-movement. Боты распознаются даже с уникальными IP.</div>
+      </div>
+      <div style="padding:12px;background:rgba(255,255,255,.04);border-radius:10px;border:1px solid var(--border)">
+        <div style="font-weight:700;margin-bottom:6px;font-size:.88rem">🍪 Сессии и куки</div>
+        <div style="font-size:.82rem;color:var(--text-m)">Многие сайты требуют авторизации или валидной сессии. Без cookies часть данных недоступна или приходит пустая страница.</div>
+      </div>
+      <div style="padding:12px;background:rgba(255,255,255,.04);border-radius:10px;border:1px solid var(--border)">
+        <div style="font-weight:700;margin-bottom:6px;font-size:.88rem">⚡ JS-рендеринг</div>
+        <div style="font-size:.82rem;color:var(--text-m)">Контент загружается через React/Vue/Angular: <code>requests.get()</code> вернёт пустой HTML — данных нет. Нужен браузер, который выполнит JS.</div>
+      </div>
+      <div style="padding:12px;background:rgba(255,255,255,.04);border-radius:10px;border:1px solid var(--border)">
+        <div style="font-weight:700;margin-bottom:6px;font-size:.88rem">🕵️ Honeypot-ловушки</div>
+        <div style="font-size:.82rem;color:var(--text-m)">Скрытые ссылки, невидимые обычному пользователю (CSS: display:none). Если бот переходит — IP моментально блокируется.</div>
+      </div>
+      <div style="padding:12px;background:rgba(255,255,255,.04);border-radius:10px;border:1px solid var(--border)">
+        <div style="font-weight:700;margin-bottom:6px;font-size:.88rem">📋 CAPTCHA</div>
+        <div style="font-size:.82rem;color:var(--text-m)">reCAPTCHA v3 ставит оценку каждому запросу по поведению. Нет человеческого поведения — получаешь капчу или редирект на страницу верификации.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Правильная стратегия -->
+  <div style="font-weight:700;margin-bottom:14px;font-size:.97rem">✅ Правильная стратегия «вежливого» парсера</div>
+  <div class="card" style="margin-bottom:24px">
+    <div style="display:grid;gap:10px">
+      <div class="parse-step" style="align-items:center">
+        <div class="parse-num">1</div>
+        <div><b>Задержки между запросами</b> — <code>time.sleep(random.uniform(2, 5))</code>. Случайный интервал имитирует человека лучше, чем фиксированный.</div>
+      </div>
+      <div class="parse-step" style="align-items:center">
+        <div class="parse-num">2</div>
+        <div><b>Ротация User-Agent</b> — использовать список реальных строк браузеров (Chrome, Firefox). Один UA = явный признак бота.</div>
+      </div>
+      <div class="parse-step" style="align-items:center">
+        <div class="parse-num">3</div>
+        <div><b>Уважай robots.txt</b> — <code>urllib.robotparser</code> или просто читай файл <code>/robots.txt</code> перед стартом. Часть страниц явно запрещена.</div>
+      </div>
+      <div class="parse-step" style="align-items:center">
+        <div class="parse-num">4</div>
+        <div><b>Обработка ошибок</b> — при 429/503 не ломиться повторно. Exponential backoff: подождать 10 сек, 20 сек, 40 сек...</div>
+      </div>
+      <div class="parse-step" style="align-items:center">
+        <div class="parse-num">5</div>
+        <div><b>Сохранять прогресс</b> — писать в файл каждые N записей. При вылете не начинать сначала.</div>
+      </div>
+      <div class="parse-step" style="align-items:center">
+        <div class="parse-num">6</div>
+        <div><b>Для JS-сайтов — Playwright/Selenium</b> — запускает реальный браузер (Chromium), выполняет JS, ждёт нужных DOM-элементов.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- JS rendering block -->
+  <div style="font-weight:700;margin-bottom:14px;font-size:.97rem">🔧 Как работать с JS-рендерингом?</div>
+  <p style="font-size:.88rem;color:var(--text-m);margin-bottom:16px">Современные сайты (React, Vue, Angular) не отдают данные в HTML — они загружают их через JS после открытия страницы. Есть два подхода:</p>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px">
+    <div class="card" style="border-color:rgba(6,182,212,.3)">
+      <div style="font-weight:700;margin-bottom:8px;font-size:.9rem;color:var(--cyan)">🔍 Подход 1: Перехватить XHR/Fetch</div>
+      <div style="font-size:.83rem;color:var(--text-m);margin-bottom:10px">Открой DevTools → Network → XHR/Fetch. Сайт сам дёргает свой внутренний API — ты видишь URL и ответ.</div>
+      <div style="font-size:.82rem;line-height:1.7">
+        <div style="margin-bottom:4px">1. F12 → вкладка Network → фильтр <code>Fetch/XHR</code></div>
+        <div style="margin-bottom:4px">2. Обновить страницу → найти запрос с JSON-данными</div>
+        <div style="margin-bottom:4px">3. Скопировать URL + заголовки (<code>Authorization</code>, <code>Cookie</code>)</div>
+        <div>4. Воспроизвести запрос через <code>requests</code> с теми же headers</div>
+      </div>
+    </div>
+    <div class="card" style="border-color:rgba(139,92,246,.3)">
+      <div style="font-weight:700;margin-bottom:8px;font-size:.9rem;color:var(--purple)">🤖 Подход 2: Playwright (headless browser)</div>
+      <div style="font-size:.83rem;color:var(--text-m);margin-bottom:10px">Запускает настоящий Chromium, выполняет весь JS, ждёт нужного селектора — потом читает DOM.</div>
+      <div class="code-editor" style="margin:0">
+        <div class="code-header"><div class="code-dots"><div class="code-dot r"></div><div class="code-dot y"></div><div class="code-dot g"></div></div><span class="code-lang">playwright_example.py</span></div>
+        <pre style="padding:12px;color:#e6edf3;font-size:.78rem;line-height:1.65;overflow-x:auto"><span style="color:#ff7b72">from</span> <span style="color:#79c0ff">playwright.sync_api</span> <span style="color:#ff7b72">import</span> <span style="color:#d2a8ff">sync_playwright</span>
+
+<span style="color:#ff7b72">with</span> <span style="color:#d2a8ff">sync_playwright</span>() <span style="color:#ff7b72">as</span> <span style="color:#79c0ff">p</span>:
+  browser = <span style="color:#79c0ff">p</span>.chromium.<span style="color:#d2a8ff">launch</span>(headless=<span style="color:#ff7b72">True</span>)
+  page = browser.<span style="color:#d2a8ff">new_page</span>()
+  page.<span style="color:#d2a8ff">goto</span>(<span style="color:#a5d6a7">"https://example.com"</span>)
+  page.<span style="color:#d2a8ff">wait_for_selector</span>(<span style="color:#a5d6a7">".listing-card"</span>)
+  items = page.<span style="color:#d2a8ff">query_selector_all</span>(<span style="color:#a5d6a7">".listing-card"</span>)
+  <span style="color:#ff7b72">for</span> el <span style="color:#ff7b72">in</span> items:
+    <span style="color:#d2a8ff">print</span>(el.<span style="color:#d2a8ff">text_content</span>())
+  browser.<span style="color:#d2a8ff">close</span>()</pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- Практические задания -->
+  <div class="section-divider"></div>
+  <div style="font-weight:700;margin-bottom:6px;font-size:1.05rem">💼 Практические задания — выбери своё</div>
+  <p style="font-size:.88rem;color:var(--text-m);margin-bottom:20px">Три сценария реального парсинга. Каждый — отдельный pet-project. Изучи задание и реализуй парсер.</p>
+
+  <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px">
+    <button id="ptab0" class="api-run" style="padding:9px 18px;font-size:.85rem;border-color:rgba(16,185,129,.5)"
+      onclick="switchPTask(0)">🏠 Риелторский сайт</button>
+    <button id="ptab1" class="api-run" style="padding:9px 18px;font-size:.85rem;border-color:rgba(59,130,246,.4);color:var(--blue);background:rgba(59,130,246,.08)"
+      onclick="switchPTask(1)">💼 Поиск работы</button>
+    <button id="ptab2" class="api-run" style="padding:9px 18px;font-size:.85rem;border-color:rgba(139,92,246,.4);color:var(--purple);background:rgba(139,92,246,.08)"
+      onclick="switchPTask(2)">🛒 Товарный агрегатор</button>
+  </div>
+
+  <!-- Task 0: Real estate -->
+  <div id="ptask0" class="card" style="margin-bottom:24px">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+      <div style="font-size:2rem">🏠</div>
+      <div>
+        <div style="font-weight:800;font-size:1rem">Задание 1: Парсинг объявлений о недвижимости</div>
+        <div style="font-size:.83rem;color:var(--text-m)">Прототип: ЦИАН, Авито.Недвижимость, Домклик, Zillow, Rightmove</div>
+      </div>
+    </div>
+    <div style="font-size:.85rem;margin-bottom:16px;line-height:1.8;color:var(--text-m)">
+      <b style="color:var(--text)">Цель:</b> собрать базу квартир в аренду/продажу по городу: цена, площадь, этаж, адрес, дата публикации, ссылка.<br>
+      <b style="color:var(--text)">Что мешает:</b> бесконечный скролл (Intersection Observer), JS-рендеринг цен, анти-бот (Cloudflare на Авито),
+      пагинация через параметры URL (<code>?p=2</code> или через API XHR).
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px">
+      <div>
+        <div style="font-weight:700;font-size:.87rem;margin-bottom:8px;color:var(--cyan)">🔍 Что смотреть в DevTools</div>
+        <ul style="font-size:.82rem;color:var(--text-m);line-height:1.9;padding-left:18px;margin:0">
+          <li>Network → XHR → найти <code>/api/offers</code> или <code>/listings</code></li>
+          <li>Смотреть параметры запроса: город, тип, страница</li>
+          <li>Скопировать <code>Cookie</code> и <code>x-csrf-token</code> из заголовков</li>
+          <li>Проверить, меняется ли ответ без авторизации</li>
+        </ul>
+      </div>
+      <div>
+        <div style="font-weight:700;font-size:.87rem;margin-bottom:8px;color:var(--green)">✅ План реализации</div>
+        <ul style="font-size:.82rem;color:var(--text-m);line-height:1.9;padding-left:18px;margin:0">
+          <li>Идти по страницам пагинации (page=1..N)</li>
+          <li>На каждой странице собирать карточки объявлений</li>
+          <li>delay = <code>random.uniform(3, 7)</code> сек между страницами</li>
+          <li>Сохранять в CSV после каждых 50 записей</li>
+        </ul>
+      </div>
+    </div>
+    <div class="code-editor">
+      <div class="code-header"><div class="code-dots"><div class="code-dot r"></div><div class="code-dot y"></div><div class="code-dot g"></div></div><span class="code-lang">realty_scraper.py · шаблон</span></div>
+      <pre style="padding:16px;color:#e6edf3;font-size:.82rem;line-height:1.7;overflow-x:auto"><span style="color:#ff7b72">import</span> <span style="color:#79c0ff">requests, time, random, csv</span>
+<span style="color:#ff7b72">from</span> <span style="color:#79c0ff">bs4</span> <span style="color:#ff7b72">import</span> <span style="color:#d2a8ff">BeautifulSoup</span>
+
+HEADERS = {
+    <span style="color:#a5d6a7">"User-Agent"</span>: <span style="color:#a5d6a7">"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/122.0 Safari/537.36"</span>,
+    <span style="color:#a5d6a7">"Accept-Language"</span>: <span style="color:#a5d6a7">"ru-RU,ru;q=0.9"</span>,
+    <span style="color:#a5d6a7">"Referer"</span>: <span style="color:#a5d6a7">"https://example-realty.ru/"</span>
+}
+
+<span style="color:#ff7b72">def</span> <span style="color:#d2a8ff">scrape_page</span>(page_num):
+    url = <span style="color:#a5d6a7">f"https://example-realty.ru/moscow/rent/?p={page_num}"</span>
+    resp = requests.<span style="color:#d2a8ff">get</span>(url, headers=HEADERS, timeout=15)
+    <span style="color:#ff7b72">if</span> resp.status_code != 200:
+        <span style="color:#d2a8ff">print</span>(<span style="color:#a5d6a7">f"Ошибка {resp.status_code} на стр. {page_num}"</span>)
+        <span style="color:#ff7b72">return</span> []
+    soup = <span style="color:#d2a8ff">BeautifulSoup</span>(resp.text, <span style="color:#a5d6a7">"html.parser"</span>)
+    results = []
+    <span style="color:#ff7b72">for</span> card <span style="color:#ff7b72">in</span> soup.<span style="color:#d2a8ff">select</span>(<span style="color:#a5d6a7">".offer-card"</span>):  <span style="color:#8b949e"># ← замени на реальный селектор!</span>
+        results.<span style="color:#d2a8ff">append</span>({
+            <span style="color:#a5d6a7">"price"</span>: card.<span style="color:#d2a8ff">select_one</span>(<span style="color:#a5d6a7">".price"</span>).<span style="color:#d2a8ff">get_text</span>(strip=<span style="color:#ff7b72">True</span>),
+            <span style="color:#a5d6a7">"area"</span>:  card.<span style="color:#d2a8ff">select_one</span>(<span style="color:#a5d6a7">".area"</span>).<span style="color:#d2a8ff">get_text</span>(strip=<span style="color:#ff7b72">True</span>),
+            <span style="color:#a5d6a7">"addr"</span>:  card.<span style="color:#d2a8ff">select_one</span>(<span style="color:#a5d6a7">".address"</span>).<span style="color:#d2a8ff">get_text</span>(strip=<span style="color:#ff7b72">True</span>),
+            <span style="color:#a5d6a7">"link"</span>:  card.<span style="color:#d2a8ff">select_one</span>(<span style="color:#a5d6a7">"a"</span>)[<span style="color:#a5d6a7">"href"</span>]
+        })
+    <span style="color:#ff7b72">return</span> results
+
+<span style="color:#ff7b72">with</span> <span style="color:#d2a8ff">open</span>(<span style="color:#a5d6a7">"apartments.csv"</span>, <span style="color:#a5d6a7">"w"</span>, newline=<span style="color:#a5d6a7">""</span>, encoding=<span style="color:#a5d6a7">"utf-8"</span>) <span style="color:#ff7b72">as</span> f:
+    writer = csv.<span style="color:#d2a8ff">DictWriter</span>(f, fieldnames=[<span style="color:#a5d6a7">"price","area","addr","link"</span>])
+    writer.<span style="color:#d2a8ff">writeheader</span>()
+    <span style="color:#ff7b72">for</span> page <span style="color:#ff7b72">in</span> <span style="color:#d2a8ff">range</span>(1, 20):
+        rows = <span style="color:#d2a8ff">scrape_page</span>(page)
+        writer.<span style="color:#d2a8ff">writerows</span>(rows)
+        <span style="color:#d2a8ff">print</span>(<span style="color:#a5d6a7">f"Страница {page}: {len(rows)} объявлений"</span>)
+        time.<span style="color:#d2a8ff">sleep</span>(random.<span style="color:#d2a8ff">uniform</span>(3, 7))  <span style="color:#8b949e"># ← вежливая задержка</span></pre>
+    </div>
+    <div style="margin-top:14px;padding:12px;background:rgba(245,158,11,.07);border-radius:10px;border:1px solid rgba(245,158,11,.25);font-size:.83rem">
+      <b style="color:var(--amber)">💡 Совет:</b> Если сайт за Cloudflare — попробуй библиотеку <code>cloudscraper</code>
+      (<code>pip install cloudscraper</code>). Она автоматически обходит JS-challenge первого уровня.
+      Для более сложных случаев — Playwright с реальным браузером.
+    </div>
+  </div>
+
+  <!-- Task 1: Job search -->
+  <div id="ptask1" class="card" style="display:none;margin-bottom:24px">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+      <div style="font-size:2rem">💼</div>
+      <div>
+        <div style="font-weight:800;font-size:1rem">Задание 2: Парсинг вакансий с сайтов поиска работы</div>
+        <div style="font-size:.83rem;color:var(--text-m)">Прототип: hh.ru (есть API!), SuperJob, Труд.com, Indeed, LinkedIn Jobs</div>
+      </div>
+    </div>
+    <div style="font-size:.85rem;margin-bottom:16px;line-height:1.8;color:var(--text-m)">
+      <b style="color:var(--text)">Цель:</b> собрать базу вакансий Python-разработчика: название, компания, зарплата, город, навыки, ссылка.<br>
+      <b style="color:var(--text)">Что мешает:</b> авторизация (SuperJob), AJAX-пагинация, динамические классы (меняются при деплое),
+      у hh.ru <b>есть открытый API</b> — лучше использовать его вместо парсинга.
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px">
+      <div>
+        <div style="font-weight:700;font-size:.87rem;margin-bottom:8px;color:var(--cyan)">🔍 Что смотреть в DevTools</div>
+        <ul style="font-size:.82rem;color:var(--text-m);line-height:1.9;padding-left:18px;margin:0">
+          <li>Network → поиск запросов к <code>/search/vacancy</code></li>
+          <li>Параметры: <code>text=python&amp;area=1&amp;page=0</code></li>
+          <li>Нет XHR JSON? Значит SSR — парсим HTML</li>
+          <li>Проверить <code>data-*</code> атрибуты — часто там весь JSON объекта</li>
+        </ul>
+      </div>
+      <div>
+        <div style="font-weight:700;font-size:.87rem;margin-bottom:8px;color:var(--green)">✅ Трюк: JSON внутри HTML</div>
+        <ul style="font-size:.82rem;color:var(--text-m);line-height:1.9;padding-left:18px;margin:0">
+          <li>Ищи тег <code>&lt;script type="application/ld+json"&gt;</code></li>
+          <li>Или <code>&lt;script id="__NEXT_DATA__"&gt;</code> — Next.js прячет там весь стейт</li>
+          <li>Это JSON — просто <code>json.loads()</code>, никакого BeautifulSoup</li>
+          <li>Самый надёжный способ для SSR-сайтов</li>
+        </ul>
+      </div>
+    </div>
+    <div class="code-editor">
+      <div class="code-header"><div class="code-dots"><div class="code-dot r"></div><div class="code-dot y"></div><div class="code-dot g"></div></div><span class="code-lang">jobs_scraper.py · Next.js __NEXT_DATA__ трюк</span></div>
+      <pre style="padding:16px;color:#e6edf3;font-size:.82rem;line-height:1.7;overflow-x:auto"><span style="color:#ff7b72">import</span> <span style="color:#79c0ff">requests, json, time, random</span>
+<span style="color:#ff7b72">from</span> <span style="color:#79c0ff">bs4</span> <span style="color:#ff7b72">import</span> <span style="color:#d2a8ff">BeautifulSoup</span>
+
+HEADERS = {<span style="color:#a5d6a7">"User-Agent"</span>: <span style="color:#a5d6a7">"Mozilla/5.0 (X11; Linux x86_64) Chrome/122.0 Safari/537.36"</span>}
+
+<span style="color:#ff7b72">def</span> <span style="color:#d2a8ff">get_next_data</span>(url):
+    <span style="color:#a5d6a7">"""Извлекаем JSON из __NEXT_DATA__ — работает на Next.js сайтах"""</span>
+    resp = requests.<span style="color:#d2a8ff">get</span>(url, headers=HEADERS, timeout=15)
+    soup = <span style="color:#d2a8ff">BeautifulSoup</span>(resp.text, <span style="color:#a5d6a7">"html.parser"</span>)
+    tag  = soup.<span style="color:#d2a8ff">find</span>(<span style="color:#a5d6a7">"script"</span>, id=<span style="color:#a5d6a7">"__NEXT_DATA__"</span>)
+    <span style="color:#ff7b72">if not</span> tag:
+        <span style="color:#ff7b72">return None</span>
+    <span style="color:#ff7b72">return</span> json.<span style="color:#d2a8ff">loads</span>(tag.string)
+
+<span style="color:#ff7b72">def</span> <span style="color:#d2a8ff">get_ld_json</span>(url):
+    <span style="color:#a5d6a7">"""Достаём структурированные данные Schema.org из ld+json"""</span>
+    resp = requests.<span style="color:#d2a8ff">get</span>(url, headers=HEADERS, timeout=15)
+    soup = <span style="color:#d2a8ff">BeautifulSoup</span>(resp.text, <span style="color:#a5d6a7">"html.parser"</span>)
+    tag  = soup.<span style="color:#d2a8ff">find</span>(<span style="color:#a5d6a7">"script"</span>, type=<span style="color:#a5d6a7">"application/ld+json"</span>)
+    <span style="color:#ff7b72">if not</span> tag:
+        <span style="color:#ff7b72">return None</span>
+    <span style="color:#ff7b72">return</span> json.<span style="color:#d2a8ff">loads</span>(tag.string)
+
+all_jobs = []
+<span style="color:#ff7b72">for</span> page <span style="color:#ff7b72">in</span> <span style="color:#d2a8ff">range</span>(0, 10):
+    url = <span style="color:#a5d6a7">f"https://example-jobs.ru/search?q=python&amp;page={page}"</span>
+    data = <span style="color:#d2a8ff">get_next_data</span>(url)
+    <span style="color:#ff7b72">if</span> data:
+        vacancies = data.<span style="color:#d2a8ff">get</span>(<span style="color:#a5d6a7">"props"</span>, {}).<span style="color:#d2a8ff">get</span>(<span style="color:#a5d6a7">"pageProps"</span>, {}).<span style="color:#d2a8ff">get</span>(<span style="color:#a5d6a7">"vacancies"</span>, [])
+        all_jobs.<span style="color:#d2a8ff">extend</span>(vacancies)
+        <span style="color:#d2a8ff">print</span>(<span style="color:#a5d6a7">f"Страница {page}: {len(vacancies)} вакансий"</span>)
+    time.<span style="color:#d2a8ff">sleep</span>(random.<span style="color:#d2a8ff">uniform</span>(2, 5))</pre>
+    </div>
+    <div style="margin-top:14px;padding:12px;background:rgba(16,185,129,.06);border-radius:10px;border:1px solid rgba(16,185,129,.25);font-size:.83rem">
+      <b style="color:var(--green)">💡 Совет:</b> hh.ru имеет официальный <a href="https://dev.hh.ru" target="_blank" style="color:var(--cyan)">dev.hh.ru API</a>
+      — 200 запросов в минуту бесплатно. Всегда предпочитай официальное API парсингу, если оно есть.
+    </div>
+  </div>
+
+  <!-- Task 2: Price aggregator -->
+  <div id="ptask2" class="card" style="display:none;margin-bottom:24px">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+      <div style="font-size:2rem">🛒</div>
+      <div>
+        <div style="font-weight:800;font-size:1rem">Задание 3: Мониторинг цен товарного агрегатора</div>
+        <div style="font-size:.83rem;color:var(--text-m)">Прототип: DNS, Яндекс.Маркет, Wildberries, OZON, Amazon, eBay</div>
+      </div>
+    </div>
+    <div style="font-size:.85rem;margin-bottom:16px;line-height:1.8;color:var(--text-m)">
+      <b style="color:var(--text)">Цель:</b> выбрать категорию (ноутбуки, видеокарты, смартфоны) и собирать цены раз в день, строить график динамики.<br>
+      <b style="color:var(--text)">Что мешает:</b> JavaScript-цены (React), Bot-score (Wildberries), сплит-тесты (разные цены для разных пользователей),
+      геолокация (цены различаются по регионам).
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px">
+      <div>
+        <div style="font-weight:700;font-size:.87rem;margin-bottom:8px;color:var(--cyan)">🔍 Wildberries: скрытый API</div>
+        <ul style="font-size:.82rem;color:var(--text-m);line-height:1.9;padding-left:18px;margin:0">
+          <li>WB использует внутренний JSON API — нет защиты</li>
+          <li>Каталог: <code>catalog.wb.ru/catalog/{cat}/v1/filters</code></li>
+          <li>Товары: <code>catalog.wb.ru/catalog/{cat}/catalog?...</code></li>
+          <li>Ответ — чистый JSON с ценами, рейтингами, фото</li>
+        </ul>
+      </div>
+      <div>
+        <div style="font-weight:700;font-size:.87rem;margin-bottom:8px;color:var(--purple)">🤖 Playwright для React-цен</div>
+        <ul style="font-size:.82rem;color:var(--text-m);line-height:1.9;padding-left:18px;margin:0">
+          <li>Запустить headless Chromium</li>
+          <li>Ждать <code>wait_for_selector('.price-block')</code></li>
+          <li>Перехватывать network-ответы через <code>page.on('response', ...)</code></li>
+          <li>Сохранять скриншот как доказательство ценника</li>
+        </ul>
+      </div>
+    </div>
+    <div class="code-editor">
+      <div class="code-header"><div class="code-dots"><div class="code-dot r"></div><div class="code-dot y"></div><div class="code-dot g"></div></div><span class="code-lang">price_monitor.py · Playwright + перехват сетевых запросов</span></div>
+      <pre style="padding:16px;color:#e6edf3;font-size:.82rem;line-height:1.7;overflow-x:auto"><span style="color:#ff7b72">import</span> <span style="color:#79c0ff">json, csv, time</span>
+<span style="color:#ff7b72">from</span> <span style="color:#79c0ff">datetime</span> <span style="color:#ff7b72">import</span> <span style="color:#d2a8ff">datetime</span>
+<span style="color:#ff7b72">from</span> <span style="color:#79c0ff">playwright.sync_api</span> <span style="color:#ff7b72">import</span> <span style="color:#d2a8ff">sync_playwright</span>
+
+prices_log = []
+
+<span style="color:#ff7b72">def</span> <span style="color:#d2a8ff">intercept_response</span>(response):
+    <span style="color:#a5d6a7">"""Перехватываем JSON-ответы API магазина"""</span>
+    <span style="color:#ff7b72">if</span> <span style="color:#a5d6a7">"api/catalog"</span> <span style="color:#ff7b72">in</span> response.url <span style="color:#ff7b72">and</span> response.status == 200:
+        <span style="color:#ff7b72">try</span>:
+            data = response.<span style="color:#d2a8ff">json</span>()
+            <span style="color:#ff7b72">for</span> item <span style="color:#ff7b72">in</span> data.<span style="color:#d2a8ff">get</span>(<span style="color:#a5d6a7">"items"</span>, []):
+                prices_log.<span style="color:#d2a8ff">append</span>({
+                    <span style="color:#a5d6a7">"date"</span>:  <span style="color:#d2a8ff">datetime</span>.<span style="color:#d2a8ff">now</span>().<span style="color:#d2a8ff">strftime</span>(<span style="color:#a5d6a7">"%Y-%m-%d"</span>),
+                    <span style="color:#a5d6a7">"name"</span>:  item.<span style="color:#d2a8ff">get</span>(<span style="color:#a5d6a7">"name"</span>),
+                    <span style="color:#a5d6a7">"price"</span>: item.<span style="color:#d2a8ff">get</span>(<span style="color:#a5d6a7">"salePriceU"</span>, 0) // 100
+                })
+        <span style="color:#ff7b72">except</span>: <span style="color:#ff7b72">pass</span>
+
+<span style="color:#ff7b72">with</span> <span style="color:#d2a8ff">sync_playwright</span>() <span style="color:#ff7b72">as</span> p:
+    browser = p.chromium.<span style="color:#d2a8ff">launch</span>(headless=<span style="color:#ff7b72">True</span>)
+    page = browser.<span style="color:#d2a8ff">new_page</span>()
+    page.<span style="color:#d2a8ff">on</span>(<span style="color:#a5d6a7">"response"</span>, intercept_response)
+    page.<span style="color:#d2a8ff">goto</span>(<span style="color:#a5d6a7">"https://example-shop.ru/catalog/laptops/"</span>)
+    page.<span style="color:#d2a8ff">wait_for_load_state</span>(<span style="color:#a5d6a7">"networkidle"</span>)
+    <span style="color:#ff7b72">for</span> _ <span style="color:#ff7b72">in</span> <span style="color:#d2a8ff">range</span>(5):
+        page.<span style="color:#d2a8ff">keyboard</span>.<span style="color:#d2a8ff">press</span>(<span style="color:#a5d6a7">"End"</span>)
+        time.<span style="color:#d2a8ff">sleep</span>(2)
+    browser.<span style="color:#d2a8ff">close</span>()
+
+<span style="color:#ff7b72">with</span> <span style="color:#d2a8ff">open</span>(<span style="color:#a5d6a7">"prices.csv"</span>, <span style="color:#a5d6a7">"a"</span>, newline=<span style="color:#a5d6a7">""</span>) <span style="color:#ff7b72">as</span> f:
+    w = csv.<span style="color:#d2a8ff">DictWriter</span>(f, fieldnames=[<span style="color:#a5d6a7">"date","name","price"</span>])
+    w.<span style="color:#d2a8ff">writerows</span>(prices_log)
+<span style="color:#d2a8ff">print</span>(<span style="color:#a5d6a7">f"Сохранено {len(prices_log)} записей"</span>)</pre>
+    </div>
+    <div style="margin-top:14px;padding:12px;background:rgba(139,92,246,.06);border-radius:10px;border:1px solid rgba(139,92,246,.25);font-size:.83rem">
+      <b style="color:var(--purple)">💡 Совет:</b> Запускай скрипт раз в день через <b>cron</b> (Linux) или <b>Планировщик задач</b> (Windows).
+      Через неделю у тебя будет датасет с динамикой цен — отличная основа для ML-модели предсказания распродаж.
+    </div>
+  </div>
+
+  <!-- Legal -->
+  <div class="card" style="border-color:rgba(239,68,68,.3);background:rgba(239,68,68,.04)">
+    <div style="display:flex;gap:12px;align-items:flex-start">
+      <div style="font-size:1.4rem;flex-shrink:0">⚖️</div>
+      <div>
+        <div style="font-weight:700;margin-bottom:6px;color:var(--red)">Юридические аспекты</div>
+        <ul class="pill-list">
+          <li>Всегда проверяй <b>robots.txt</b> перед скрейпингом</li>
+          <li>Соблюдай <b>Terms of Service</b> сайта</li>
+          <li><b>GDPR</b> (ЕС) — штрафы до 4% оборота за нарушение приватности</li>
+          <li>Не перегружай сервер — ставь <b>задержки между запросами</b></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom nav -->
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-top:36px;flex-wrap:wrap;gap:12px">
+    <a href="learn.html" class="btn btn-outline">← Теория и практика</a>
+    <a href="quiz.html" class="btn btn-primary">Перейти к тесту →</a>
+  </div>
+
+</div><!-- /container -->
+
+<script>
+/* ══ Practical task switcher ══ */
+function switchPTask(n) {
+  const COLORS = [
+    {border:'rgba(16,185,129,.5)',  color:'var(--green)',  bg:'rgba(16,185,129,.1)'},
+    {border:'rgba(59,130,246,.4)',  color:'var(--blue)',   bg:'rgba(59,130,246,.08)'},
+    {border:'rgba(139,92,246,.4)', color:'var(--purple)', bg:'rgba(139,92,246,.08)'}
+  ];
+  [0,1,2].forEach(i => {
+    const btn  = document.getElementById('ptab' + i);
+    const task = document.getElementById('ptask' + i);
+    if (task) task.style.display = i === n ? '' : 'none';
+    if (btn) {
+      btn.style.borderColor = COLORS[i].border;
+      btn.style.color       = COLORS[i].color;
+      btn.style.background  = i === n ? COLORS[i].bg : 'transparent';
+      btn.style.fontWeight  = i === n ? '700' : '600';
+    }
+  });
+}
+
+/* ══ Interactive API URL updaters ══ */
+function updateJpUrl() {
+  const v = Math.max(1, Math.min(10, parseInt(document.getElementById('inp-jp').value) || 1));
+  document.getElementById('url-jp').textContent = `https://jsonplaceholder.typicode.com/users/${v}`;
+}
+function callUser() {
+  const v = Math.max(1, Math.min(10, parseInt(document.getElementById('inp-jp').value) || 1));
+  document.getElementById('url-jp').textContent = `https://jsonplaceholder.typicode.com/users/${v}`;
+  callApi('jp', `https://jsonplaceholder.typicode.com/users/${v}`);
+}
+
+function updateCountryUrl() {
+  const v = (document.getElementById('inp-rc').value.trim() || 'russia').toLowerCase();
+  document.getElementById('url-rc').textContent =
+    `https://restcountries.com/v3.1/name/${v}?fields=name,capital,population,languages,currencies`;
+}
+function callCountry() {
+  const v = (document.getElementById('inp-rc').value.trim() || 'russia').toLowerCase();
+  const url = `https://restcountries.com/v3.1/name/${encodeURIComponent(v)}?fields=name,capital,population,languages,currencies`;
+  document.getElementById('url-rc').textContent = url.replace(/%20/g, ' ');
+  callApi('rc', url);
+}
+
+function updatePokemonUrl() {
+  const v = (document.getElementById('inp-pk').value.trim() || 'pikachu').toLowerCase();
+  document.getElementById('url-pk').textContent = `https://pokeapi.co/api/v2/pokemon/${v}`;
+}
+function callPokemon() {
+  const v = (document.getElementById('inp-pk').value.trim() || 'pikachu').toLowerCase();
+  document.getElementById('url-pk').textContent = `https://pokeapi.co/api/v2/pokemon/${v}`;
+  callApi('pk', `https://pokeapi.co/api/v2/pokemon/${encodeURIComponent(v)}`);
+}
+
+function updateWeatherUrl() {
+  const [lat, lon] = document.getElementById('sel-wt').value.split(',');
+  document.getElementById('url-wt').textContent =
+    `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true`;
+}
+function callWeather() {
+  const [lat, lon] = document.getElementById('sel-wt').value.split(',');
+  const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true`;
+  document.getElementById('url-wt').textContent = url;
+  callApi('wt', url);
+}
+
+/* ══ callApi — полный JSON, без обрезки ══ */
+async function callApi(id, url) {
+  const btn = document.getElementById('btn-' + id);
+  const res = document.getElementById('res-' + id);
+  btn.disabled    = true;
+  btn.textContent = '⏳';
+  res.classList.add('show');
+  res.style.color = 'var(--text-d)';
+  res.textContent = 'Загрузка...';
+  try {
+    const r    = await fetch(url);
+    const data = await r.json();
+    /* Полный JSON без ограничения строк */
+    const txt  = JSON.stringify(data, null, 2);
+    res.innerHTML  = txt.split('\n').map(colorLine).join('\n');
+    res.style.color = '';
+    btn.textContent = '🔄 Ещё раз';
+  } catch(e) {
+    res.innerHTML = `<span style="color:var(--red)">❌ Ошибка: ${e.message}</span>`;
+    btn.textContent = '▶ Запрос';
+  }
+  btn.disabled = false;
+}
+
+function colorLine(line) {
+  return line
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"([^"]+)":/g, '<span style="color:#80cbc4">"$1":</span>')
+    .replace(/: "([^"]*)"/g, ': <span style="color:#a5d6a7">"$1"</span>')
+    .replace(/: (\d+\.?\d*)(,?)$/g, ': <span style="color:#f9a825">$1</span>$2')
+    .replace(/: (true|false|null)/g, ': <span style="color:#ff7b72">$1</span>');
+}
+</script>
+</body>
+</html>
