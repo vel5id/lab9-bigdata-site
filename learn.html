@@ -90,7 +90,7 @@
       0%{transform:translateY(-20px) rotate(0deg);opacity:1}
       100%{transform:translateY(80vh) rotate(720deg);opacity:0}
     }
-    .hint-box{display:block!important;animation:fadeIn .4s ease}
+    .hint-box{animation:fadeIn .4s ease}
     .hint-toggle{background:none;border:none;color:var(--text-d);font-size:.8rem;
       cursor:pointer;margin-top:8px;font-family:inherit;transition:color .2s}
     .hint-toggle:hover{color:var(--amber)}
@@ -1075,12 +1075,13 @@
             onkeydown="if(event.key==='Enter') runTask(0)" autocomplete="off" spellcheck="false">
           <button class="run-btn" onclick="runTask(0)" id="runBtn0">▶ Запуск</button>
         </div>
-        <div id="hint0" class="hint-box">
-          🔑 <b>Подсказка:</b> методы VK API группируются по сущностям.
-          Для работы с <b>пользователями</b> начало всегда <code style="font-family:monospace">users.</code>
-          Чтобы <b>получить</b> данные — используй метод <code style="font-family:monospace">users.get</code>
+        <div id="hint0" class="hint-box" style="display:none">
+          🔑 VK API следует паттерну <code style="font-family:monospace">сущность.действие</code>.
+          Посмотри на код: какую <b>сущность</b> запрашивают параметры
+          <code style="font-family:monospace">user_ids</code> и <code style="font-family:monospace">fields</code>?
+          Какое <b>действие</b> выполняет запрос — получение, создание или удаление?
         </div>
-        <button class="hint-toggle" id="htbtn0" onclick="toggleHint(0)">▲ Скрыть подсказку</button>
+        <button class="hint-toggle" id="htbtn0" onclick="toggleHint(0)">▼ Подсказка</button>
       </div>
       <div style="margin-top:16px">
         <div class="terminal">
@@ -1147,12 +1148,13 @@
             onkeydown="if(event.key==='Enter') runTask(1)" autocomplete="off" spellcheck="false">
           <button class="run-btn" onclick="runTask(1)" id="runBtn1">▶ Запуск</button>
         </div>
-        <div id="hint1" class="hint-box">
-          🔑 <b>Подсказка:</b> всё что связано с <b>друзьями</b> — методы начинаются с <code style="font-family:monospace">friends.</code>
-          Чтобы <b>получить список</b> — суффикс <code style="font-family:monospace">.get</code>
-          → итого: <code style="font-family:monospace">friends.get</code>
+        <div id="hint1" class="hint-box" style="display:none">
+          🔑 VK API: <code style="font-family:monospace">сущность.действие</code>.
+          Обрати внимание на параметр <code style="font-family:monospace">order: "name"</code>
+          и поле <code style="font-family:monospace">response.count</code> в коде —
+          о каких <b>отношениях между людьми</b> идёт речь?
         </div>
-        <button class="hint-toggle" id="htbtn1" onclick="toggleHint(1)">▲ Скрыть подсказку</button>
+        <button class="hint-toggle" id="htbtn1" onclick="toggleHint(1)">▼ Подсказка</button>
       </div>
       <div style="margin-top:16px">
         <div class="terminal">
@@ -1217,12 +1219,13 @@
             onkeydown="if(event.key==='Enter') runTask(2)" autocomplete="off" spellcheck="false">
           <button class="run-btn" onclick="runTask(2)" id="runBtn2">▶ Запуск</button>
         </div>
-        <div id="hint2" class="hint-box">
-          🔑 <b>Подсказка:</b> работа с <b>группами/сообществами</b> — методы начинаются с <code style="font-family:monospace">groups.</code>
-          Для получения списка — суффикс <code style="font-family:monospace">.get</code>
-          → итого: <code style="font-family:monospace">groups.get</code>
+        <div id="hint2" class="hint-box" style="display:none">
+          🔑 VK API: <code style="font-family:monospace">сущность.действие</code>.
+          Параметры <code style="font-family:monospace">filter: "groups"</code> и
+          <code style="font-family:monospace">members_count</code> намекают на тип
+          <b>сообщества</b>. Какое действие ты хочешь совершить с этой сущностью?
         </div>
-        <button class="hint-toggle" id="htbtn2" onclick="toggleHint(2)">▲ Скрыть подсказку</button>
+        <button class="hint-toggle" id="htbtn2" onclick="toggleHint(2)">▼ Подсказка</button>
       </div>
       <div style="margin-top:16px">
         <div class="terminal">
@@ -2063,7 +2066,7 @@ function toggleHint(n) {
   const btn = document.getElementById('htbtn'+n);
   const hidden = h.style.display === 'none';
   h.style.display   = hidden ? 'block' : 'none';
-  btn.textContent   = hidden ? '▲ Скрыть подсказку' : '▼ Показать подсказку';
+  btn.textContent   = hidden ? '▲ Скрыть' : '▼ Подсказка';
 }
 
 function runTask(n) {
