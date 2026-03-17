@@ -1,0 +1,9 @@
+*.docx
+*.pptx
+*.xlsx
+*.doc
+*.ppt
+*.~lock.*
+learn_backup.html
+lab.html
+.DS_Store

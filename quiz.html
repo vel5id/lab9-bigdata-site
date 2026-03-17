@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Тест — Лаб. №9 Big Data</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .quiz-intro{
+      text-align:center;padding:60px 20px;
+      max-width:600px;margin:0 auto;
+    }
+    .intro-icon{font-size:4rem;margin-bottom:20px;animation:float-icon 3s ease-in-out infinite}
+    @keyframes float-icon{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+    .quiz-main{display:none}
+    .quiz-end{display:none;text-align:center;padding:60px 20px;max-width:500px;margin:0 auto}
+  </style>
+</head>
+<body class="page">
+
+<!-- ── TOP NAV ── -->
+<nav class="top-nav">
+  <a href="index.html" class="nav-brand" style="text-decoration:none">⚡ BigData Lab</a>
+  <div class="nav-steps">
+    <a href="index.html" class="nav-step done" title="Введение">✓</a>
+    <div class="nav-conn"></div>
+    <a href="learn.html" class="nav-step done" title="Теория + Практика">✓</a>
+    <div class="nav-conn"></div>
+    <div class="nav-step active" title="Тест">3</div>
+    <div class="nav-conn"></div>
+    <a href="results.html" class="nav-step" title="Результаты">4</a>
+  </div>
+  <div class="nav-spacer"></div>
+</nav>
+
+<!-- ── INTRO ── -->
+<div class="quiz-wrap" id="introPanel">
+  <div class="quiz-intro">
+    <div class="intro-icon">🧠</div>
+    <div class="section-label" style="justify-content:center;display:flex">Шаг 3 / 4</div>
+    <h1 class="section-title" style="margin-bottom:10px">Тест знаний</h1>
+    <p style="color:var(--text-m);margin-bottom:32px;line-height:1.7">
+      11 вопросов по теме «Анализ социальных сетей в Big Data».<br>
+      На каждый вопрос — <b style="color:var(--amber)">30 секунд</b>.
+      Если время вышло — вопрос засчитывается как неправильный.
+    </p>
+
+    <div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap;margin-bottom:36px">
+      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r);padding:16px 24px;text-align:center">
+        <div style="font-size:1.6rem;font-weight:900;color:var(--primary)">8</div>
+        <div style="font-size:.8rem;color:var(--text-m)">вопросов</div>
+      </div>
+      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r);padding:16px 24px;text-align:center">
+        <div style="font-size:1.6rem;font-weight:900;color:var(--amber)">30″</div>
+        <div style="font-size:.8rem;color:var(--text-m)">на вопрос</div>
+      </div>
+      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r);padding:16px 24px;text-align:center">
+        <div style="font-size:1.6rem;font-weight:900;color:var(--green)">1 попытка</div>
+        <div style="font-size:.8rem;color:var(--text-m)">нет возврата</div>
+      </div>
+    </div>
+
+    <button class="btn btn-primary btn-lg" onclick="startQuiz()">
+      Начать тест →
+    </button>
+    <br>
+    <a href="learn.html" style="display:inline-block;margin-top:14px;font-size:.85rem;color:var(--text-d)">
+      ← Вернуться к практике
+    </a>
+  </div>
+</div>
+
+<!-- ── QUIZ MAIN ── -->
+<div class="quiz-wrap" id="quizPanel" style="display:none">
+  <!-- Progress bar -->
+  <div class="quiz-prog-bar">
+    <div class="quiz-prog-fill" id="progFill" style="width:0%"></div>
+  </div>
+
+  <!-- Meta row -->
+  <div class="quiz-meta">
+    <div class="quiz-counter" id="qCounter">Вопрос 1 из 8</div>
+    <div class="quiz-timer" id="qTimer">⏱ 30</div>
+  </div>
+
+  <!-- Question card -->
+  <div class="q-card" id="qCard">
+    <div class="q-text" id="qText"></div>
+    <div class="options" id="qOptions"></div>
+    <div class="explain-box" id="qExplain" style="display:none"></div>
+  </div>
+
+  <!-- Next button -->
+  <div style="text-align:right">
+    <button class="btn btn-primary" id="nextBtn" style="display:none" onclick="nextQuestion()">
+      Следующий →
+    </button>
+  </div>
+</div>
+
+<!-- ── END SCREEN ── -->
+<div class="quiz-wrap" id="endPanel" style="display:none">
+  <div class="quiz-end">
+    <div id="endIcon" style="font-size:4rem;margin-bottom:16px"></div>
+    <h2 id="endTitle" style="font-size:1.6rem;font-weight:900;margin-bottom:8px"></h2>
+    <div id="endSub" style="color:var(--text-m);margin-bottom:28px;font-size:.95rem;line-height:1.7"></div>
+    <div style="display:flex;gap:20px;justify-content:center;margin-bottom:32px">
+      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r);padding:20px 30px;text-align:center">
+        <div id="endScore" style="font-size:2.5rem;font-weight:900"></div>
+        <div style="font-size:.8rem;color:var(--text-m)">из 8 верных</div>
+      </div>
+      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r);padding:20px 30px;text-align:center">
+        <div id="endPct" style="font-size:2.5rem;font-weight:900"></div>
+        <div style="font-size:.8rem;color:var(--text-m)">процентов</div>
+      </div>
+    </div>
+    <a href="results.html" class="btn btn-primary btn-lg" style="margin-bottom:12px">
+      Посмотреть результаты →
+    </a>
+    <br>
+    <button class="btn btn-outline" onclick="restartQuiz()" style="font-size:.9rem">
+      🔄 Повторить тест
+    </button>
+  </div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════
+   QUIZ DATA — 11 вопросов
+═══════════════════════════════════════════ */
+const QUESTIONS = [
+  {
+    q: 'Что такое Sentiment Analysis в контексте анализа соцсетей?',
+    opts: [
+      'Построение и визуализация социальных графов',
+      'Определение эмоциональной окраски текста (позитив / нейтрал / негатив)',
+      'Классификация изображений при помощи нейронных сетей',
+      'Токенизация и лемматизация текстового корпуса'
+    ],
+    ans: 1,
+    exp: '✅ Sentiment Analysis (анализ тональности) — метод NLP для автоматического определения эмоциональной окраски текста. Используется для мониторинга реакции аудитории на бренды, события, продукты.'
+  },
+  {
+    q: 'Какие методы Topic Modeling чаще всего применяются для выделения скрытых тем в текстах?',
+    opts: [
+      'NER и SVM',
+      'MapReduce и HDFS',
+      'LDA и NMF',
+      'CNN и LSTM'
+    ],
+    ans: 2,
+    exp: '✅ LDA (Latent Dirichlet Allocation) и NMF (Non-Negative Matrix Factorization) — стандартные методы Topic Modeling. Они находят скрытые темы в коллекции текстов без разметки.'
+  },
+  {
+    q: 'Какая из баз данных является NoSQL и подходит для хранения неструктурированных данных?',
+    opts: [
+      'MySQL',
+      'PostgreSQL',
+      'MongoDB',
+      'SQLite'
+    ],
+    ans: 2,
+    exp: '✅ MongoDB — документоориентированная NoSQL СУБД, хранит данные в формате JSON-подобных документов (BSON). Идеальна для постов, комментариев, профилей из соцсетей.'
+  },
+  {
+    q: 'Что означает аббревиатура NER в обработке естественного языка?',
+    opts: [
+      'Network Edge Routing',
+      'Named Entity Recognition',
+      'Node Embedding Representation',
+      'Normalized Extraction Result'
+    ],
+    ans: 1,
+    exp: '✅ NER (Named Entity Recognition) — технология выявления именованных сущностей в тексте: имён людей, организаций, городов, дат. Ключевой инструмент для структурирования текстовых данных соцсетей.'
+  },
+  {
+    q: 'Для чего используется Apache Spark Streaming?',
+    opts: [
+      'Долгосрочное хранение неструктурированных данных',
+      'Построение SQL-запросов к реляционным СУБД',
+      'Обработка и анализ данных в режиме реального времени',
+      'Классификация изображений в социальных сетях'
+    ],
+    ans: 2,
+    exp: '✅ Spark Streaming обрабатывает непрерывные потоки данных в реальном времени (Twitter, Kafka, VK). Архитектура micro-batch позволяет анализировать данные с задержкой в секунды.'
+  },
+  {
+    q: 'Какая Python-библиотека специализируется на NLP с поддержкой нескольких языков?',
+    opts: [
+      'Pandas',
+      'NumPy',
+      'Matplotlib',
+      'SpaCy'
+    ],
+    ans: 3,
+    exp: '✅ SpaCy — производительная библиотека для NLP с поддержкой русского, английского и других языков. Имеет готовые модели для токенизации, лемматизации, NER и синтаксического анализа.'
+  },
+  {
+    q: 'Data Lake отличается от Data Warehouse тем, что...',
+    opts: [
+      'Data Lake хранит только структурированные таблицы с числовыми данными',
+      'Data Lake хранит сырые данные в исходном формате без предварительной обработки',
+      'Data Lake — это инструмент визуализации аналитики',
+      'Data Lake работает только с SQL-запросами'
+    ],
+    ans: 1,
+    exp: '✅ Data Lake (озеро данных) принимает и хранит данные любого типа (видео, JSON, логи) в сыром виде. Обработка происходит по запросу. Data Warehouse хранит уже очищенные, структурированные данные для аналитики.'
+  },
+  {
+    q: 'Какой европейский регламент регулирует защиту персональных данных пользователей соцсетей?',
+    opts: [
+      'HIPAA',
+      'PCI DSS',
+      'GDPR',
+      'ISO 27001'
+    ],
+    ans: 2,
+    exp: '✅ GDPR (General Data Protection Regulation) — регламент ЕС о защите данных, действующий с 2018 года. Обязывает компании получать явное согласие пользователей на сбор и обработку их данных. Штрафы — до 4% от годового оборота компании.'
+  },
+  {
+    q: 'Компания Cambridge Analytica использовала данные Facebook для:',
+    opts: [
+      'Разработки рекомендательных алгоритмов для Netflix',
+      'Политического таргетинга на выборах в США и Brexit',
+      'Создания системы распознавания лиц для полиции',
+      'Построения кредитного скоринга для банков'
+    ],
+    ans: 1,
+    exp: '✅ Cambridge Analytica собрала данные 87 млн профилей Facebook через quiz-приложение и использовала их для психографического таргетинга на выборах. Штраф Facebook — $5 млрд.'
+  },
+  {
+    q: 'Что такое «метаданные» мобильного приложения?',
+    opts: [
+      'Основной контент приложения (тексты, фото, видео)',
+      'Информация О данных: геолокация, время, устройство, клики',
+      'Исходный код приложения и его зависимости',
+      'Рекламные баннеры внутри приложения'
+    ],
+    ans: 1,
+    exp: '✅ Метаданные — это данные о данных: геолокация (GPS/Wi-Fi), время активности, модель устройства, рекламный ID, кликстрим. Используются для профилирования и таргетинга.'
+  },
+  {
+    q: 'Какой российский закон регулирует защиту персональных данных?',
+    opts: [
+      'GDPR',
+      'CCPA',
+      'ФЗ-152',
+      'ISO 27001'
+    ],
+    ans: 2,
+    exp: '✅ ФЗ-152 «О персональных данных» — российский закон, требующий хранения данных россиян на территории РФ и получения согласия на обработку. Контроль — Роскомнадзор.'
+  }
+];
+
+/* ═══════════════════════════════════════════
+   STATE
+═══════════════════════════════════════════ */
+let cur = 0;
+let score = 0;
+let answered = false;
+let timer = null;
+let timeLeft = 30;
+let answers = []; // per-question result
+
+/* ═══════════════════════════════════════════
+   QUIZ CONTROL
+═══════════════════════════════════════════ */
+function startQuiz() {
+  cur = 0; score = 0; answered = false; answers = [];
+  document.getElementById('introPanel').style.display = 'none';
+  document.getElementById('quizPanel').style.display = 'block';
+  showQuestion();
+}
+
+function showQuestion() {
+  const Q = QUESTIONS[cur];
+  answered = false;
+
+  // Progress
+  document.getElementById('progFill').style.width = (cur / QUESTIONS.length * 100) + '%';
+  document.getElementById('qCounter').textContent = `Вопрос ${cur+1} из ${QUESTIONS.length}`;
+
+  // Question text
+  document.getElementById('qText').textContent = Q.q;
+
+  // Options
+  const opts = document.getElementById('qOptions');
+  opts.innerHTML = '';
+  const letters = ['A','B','C','D'];
+  Q.opts.forEach((opt, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'opt-btn';
+    btn.innerHTML = `<span class="opt-letter">${letters[i]}</span> <span>${opt}</span>`;
+    btn.onclick = () => selectAnswer(i);
+    opts.appendChild(btn);
+  });
+
+  // Explanation
+  const expl = document.getElementById('qExplain');
+  expl.style.display = 'none';
+  expl.textContent = '';
+
+  // Next button
+  document.getElementById('nextBtn').style.display = 'none';
+
+  // Timer
+  clearInterval(timer);
+  timeLeft = 30;
+  updateTimer();
+  timer = setInterval(() => {
+    timeLeft--;
+    updateTimer();
+    if (timeLeft <= 0) {
+      clearInterval(timer);
+      if (!answered) autoFail();
+    }
+  }, 1000);
+}
+
+function updateTimer() {
+  const el = document.getElementById('qTimer');
+  el.textContent = `⏱ ${timeLeft}`;
+  el.className = 'quiz-timer' + (timeLeft <= 8 ? ' warn' : '');
+}
+
+function selectAnswer(chosen) {
+  if (answered) return;
+  answered = true;
+  clearInterval(timer);
+
+  const Q = QUESTIONS[cur];
+  const btns = document.querySelectorAll('.opt-btn');
+  btns.forEach(b => b.disabled = true);
+
+  btns[Q.ans].classList.add('correct');
+  if (chosen !== Q.ans) {
+    btns[chosen].classList.add('wrong');
+    answers.push({ q: cur, correct: false, chosen });
+  } else {
+    score++;
+    answers.push({ q: cur, correct: true, chosen });
+  }
+
+  // Show explanation
+  const expl = document.getElementById('qExplain');
+  expl.textContent = Q.exp;
+  expl.style.display = 'block';
+
+  // Show next
+  document.getElementById('nextBtn').style.display = 'inline-flex';
+
+  // If last question, change button text
+  if (cur === QUESTIONS.length - 1) {
+    document.getElementById('nextBtn').textContent = 'Завершить тест →';
+  }
+}
+
+function autoFail() {
+  answered = true;
+  const Q = QUESTIONS[cur];
+  const btns = document.querySelectorAll('.opt-btn');
+  btns.forEach(b => b.disabled = true);
+  btns[Q.ans].classList.add('correct');
+  answers.push({ q: cur, correct: false, chosen: -1 });
+
+  const expl = document.getElementById('qExplain');
+  expl.textContent = '⏰ Время вышло! ' + Q.exp;
+  expl.style.display = 'block';
+  document.getElementById('nextBtn').style.display = 'inline-flex';
+  if (cur === QUESTIONS.length - 1) {
+    document.getElementById('nextBtn').textContent = 'Завершить тест →';
+  }
+}
+
+function nextQuestion() {
+  cur++;
+  if (cur >= QUESTIONS.length) {
+    finishQuiz();
+  } else {
+    document.getElementById('progFill').style.width = (cur / QUESTIONS.length * 100) + '%';
+    // Animate card out/in
+    const card = document.getElementById('qCard');
+    card.style.animation = 'none';
+    void card.offsetWidth;
+    card.style.animation = 'fadeInUp .35s ease';
+    showQuestion();
+  }
+}
+
+function finishQuiz() {
+  clearInterval(timer);
+  document.getElementById('quizPanel').style.display = 'none';
+  document.getElementById('endPanel').style.display = 'block';
+
+  const pct = Math.round(score / QUESTIONS.length * 100);
+
+  // Save to localStorage
+  localStorage.setItem('quizScore', score);
+  localStorage.setItem('quizTotal', QUESTIONS.length);
+  localStorage.setItem('quizPct', pct);
+  localStorage.setItem('quizAnswers', JSON.stringify(answers));
+  localStorage.setItem('quizDone', '1');
+
+  // Render end screen
+  let icon, title, sub, scoreColor;
+  if (pct >= 88) {
+    icon = '🏆'; title = 'Превосходно!'; scoreColor = 'var(--green)';
+    sub = 'Блестящее владение материалом. Ты настоящий Big Data аналитик!';
+  } else if (pct >= 63) {
+    icon = '🎯'; title = 'Хороший результат!'; scoreColor = 'var(--cyan)';
+    sub = 'Хорошее понимание темы. Посмотри разбор ошибок на странице результатов.';
+  } else if (pct >= 38) {
+    icon = '📚'; title = 'Есть над чем поработать'; scoreColor = 'var(--amber)';
+    sub = 'Рекомендуем повторить теоретическую часть и пройти тест снова.';
+  } else {
+    icon = '💪'; title = 'Не сдавайся!'; scoreColor = 'var(--red)';
+    sub = 'Вернись к теории и кейсам — и попробуй ещё раз. Всё получится!';
+  }
+
+  document.getElementById('endIcon').textContent = icon;
+  document.getElementById('endTitle').textContent = title;
+  document.getElementById('endSub').textContent = sub;
+  document.getElementById('endScore').textContent = score + '/' + QUESTIONS.length;
+  document.getElementById('endScore').style.color = scoreColor;
+  document.getElementById('endPct').textContent = pct + '%';
+  document.getElementById('endPct').style.color = scoreColor;
+}
+
+function restartQuiz() {
+  document.getElementById('endPanel').style.display = 'none';
+  document.getElementById('introPanel').style.display = 'block';
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Лаб. №9 — Анализ Социальной Сети | Big Data</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .pulse-ring{
+      position:absolute;border-radius:50%;border:2px solid rgba(59,130,246,.25);
+      animation:ring-expand 3s ease-out infinite;
+    }
+    @keyframes ring-expand{
+      0%{transform:scale(.8);opacity:.8}
+      100%{transform:scale(1.8);opacity:0}
+    }
+    .floating-node{
+      position:absolute;border-radius:50%;animation:float-node 6s ease-in-out infinite;
+    }
+    @keyframes float-node{
+      0%,100%{transform:translateY(0) translateX(0)}
+      33%{transform:translateY(-18px) translateX(8px)}
+      66%{transform:translateY(8px) translateX(-12px)}
+    }
+  </style>
+</head>
+<body>
+<!-- ── TOP NAV ── -->
+<nav class="top-nav">
+  <div class="nav-brand">⚡ BigData Lab</div>
+  <div class="nav-steps">
+    <div class="nav-step active" title="Введение">1</div>
+    <div class="nav-conn"></div>
+    <a href="learn.html" class="nav-step" title="Теория + Практика">2</a>
+    <div class="nav-conn"></div>
+    <a href="quiz.html" class="nav-step" title="Тест">3</a>
+    <div class="nav-conn"></div>
+    <a href="results.html" class="nav-step" title="Результаты">4</a>
+  </div>
+  <div class="nav-spacer"></div>
+</nav>
+
+<!-- ── HERO ── -->
+<div class="hero">
+  <canvas id="networkCanvas" class="hero-canvas"></canvas>
+
+  <div class="hero-content">
+    <!-- Label -->
+    <div class="hero-label anim">🧪 Лабораторная работа №9</div>
+
+    <!-- Title with typewriter -->
+    <h1 class="hero-title anim d1" id="heroTitle">&nbsp;</h1>
+
+    <!-- Subtitle -->
+    <p class="hero-sub anim d2">
+      Исследуем Big Data социальных сетей: от сбора данных через API
+      до выявления трендов, графового анализа и прогнозирования поведения
+    </p>
+
+    <!-- Live Stats -->
+    <div class="stats-row anim d3">
+      <div class="stat-item">
+        <div class="stat-number" id="s1">0</div>
+        <div class="stat-label">твитов / мин</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-number" id="s2">0</div>
+        <div class="stat-label">млрд. пользователей</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-number" id="s3">0</div>
+        <div class="stat-label">ГБ/сек генерируется</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-number" id="s4">0</div>
+        <div class="stat-label">постов / день (VK)</div>
+      </div>
+    </div>
+
+    <!-- What's inside chips -->
+    <div class="chips anim d3">
+      <span class="chip">📖 Теория</span>
+      <span class="chip">⚡ Интерактивные кейсы</span>
+      <span class="chip">💻 API практикум</span>
+      <span class="chip">🧪 Тест знаний</span>
+      <span class="chip">🏆 Итоговая оценка</span>
+    </div>
+
+    <!-- CTA -->
+    <div class="anim d4">
+      <a href="learn.html" class="btn btn-primary btn-lg" id="startBtn" onclick="initProgress()">
+        Начать лабораторию &nbsp;→
+      </a>
+    </div>
+    <p style="margin-top:14px;font-size:.8rem;color:var(--text-d)" class="anim d5">
+      ~25 мин · 3 практических задания · 8 вопросов теста
+    </p>
+  </div>
+</div>
+
+<!-- ── PREVIEW SECTION ── -->
+<div class="section" style="background:rgba(255,255,255,.015);border-top:1px solid var(--border)">
+  <div class="container">
+    <div style="text-align:center;margin-bottom:40px">
+      <div class="section-label">Структура занятия</div>
+      <h2 class="section-title">5 шагов к пониманию Big Data</h2>
+    </div>
+    <div class="card-grid" style="max-width:900px;margin:0 auto">
+      <div class="card anim" style="border-color:rgba(6,182,212,.3)">
+        <div style="font-size:2rem;margin-bottom:12px">📡</div>
+        <div style="font-weight:800;margin-bottom:6px;color:var(--cyan)">Шаг 1 · Теория</div>
+        <div class="card-body">Источники данных, обработка текстов, методы анализа, Big Data платформы</div>
+      </div>
+      <div class="card anim d1" style="border-color:rgba(139,92,246,.3)">
+        <div style="font-size:2rem;margin-bottom:12px">🔍</div>
+        <div style="font-weight:800;margin-bottom:6px;color:var(--purple)">Шаг 2 · Кейсы</div>
+        <div class="card-body">Интерактивные сценарии: мониторинг бренда и политический анализ</div>
+      </div>
+      <div class="card anim d2" style="border-color:rgba(59,130,246,.3)">
+        <div style="font-size:2rem;margin-bottom:12px">💻</div>
+        <div style="font-weight:800;margin-bottom:6px;color:var(--primary)">Шаг 3 · API Lab</div>
+        <div class="card-body">3 реальных задания с VK API: данные пользователя, друзья, сообщества</div>
+      </div>
+      <div class="card anim d3" style="border-color:rgba(245,158,11,.3)">
+        <div style="font-size:2rem;margin-bottom:12px">🧠</div>
+        <div style="font-weight:800;margin-bottom:6px;color:var(--amber)">Шаг 4 · Тест</div>
+        <div class="card-body">8 вопросов с таймером: проверь, насколько хорошо усвоил материал</div>
+      </div>
+      <div class="card anim d4" style="border-color:rgba(16,185,129,.3)">
+        <div style="font-size:2rem;margin-bottom:12px">🏆</div>
+        <div style="font-weight:800;margin-bottom:6px;color:var(--green)">Шаг 5 · Результат</div>
+        <div class="card-body">Итоговый балл, ачивки, разбор ошибок и отчёт для преподавателя</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ── CANVAS NETWORK ANIMATION ── */
+const canvas = document.getElementById('networkCanvas');
+const ctx = canvas.getContext('2d');
+let nodes = [];
+
+function resize() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+resize();
+window.addEventListener('resize', () => { resize(); initNodes(); });
+
+function initNodes() {
+  nodes = [];
+  const n = Math.min(70, Math.floor(canvas.width * canvas.height / 16000));
+  for (let i = 0; i < n; i++) {
+    nodes.push({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      vx: (Math.random() - .5) * .45,
+      vy: (Math.random() - .5) * .45,
+      r: Math.random() * 2.5 + 1,
+      hue: [210, 270, 190][Math.floor(Math.random() * 3)]
+    });
+  }
+}
+initNodes();
+
+function draw() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  for (let i = 0; i < nodes.length; i++) {
+    for (let j = i + 1; j < nodes.length; j++) {
+      const dx = nodes[i].x - nodes[j].x;
+      const dy = nodes[i].y - nodes[j].y;
+      const d = Math.sqrt(dx*dx + dy*dy);
+      if (d < 155) {
+        ctx.beginPath();
+        ctx.moveTo(nodes[i].x, nodes[i].y);
+        ctx.lineTo(nodes[j].x, nodes[j].y);
+        ctx.strokeStyle = `rgba(59,130,246,${(1-d/155)*.25})`;
+        ctx.lineWidth = .7;
+        ctx.stroke();
+      }
+    }
+  }
+  nodes.forEach(n => {
+    ctx.beginPath();
+    ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2);
+    ctx.fillStyle = `hsla(${n.hue},78%,62%,.75)`;
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(n.x, n.y, n.r * 3.5, 0, Math.PI * 2);
+    ctx.fillStyle = `hsla(${n.hue},78%,62%,.04)`;
+    ctx.fill();
+    n.x += n.vx; n.y += n.vy;
+    if (n.x < 0 || n.x > canvas.width) n.vx *= -1;
+    if (n.y < 0 || n.y > canvas.height) n.vy *= -1;
+  });
+  requestAnimationFrame(draw);
+}
+draw();
+
+/* ── TYPEWRITER ── */
+const phrases = ['Анализ\nСоциальной Сети', 'Big Data\n& Социальные Сети'];
+const el = document.getElementById('heroTitle');
+let pidx = 0, cidx = 0, deleting = false;
+
+function type() {
+  const phrase = phrases[pidx];
+  if (!deleting) {
+    el.innerHTML = phrase.slice(0, cidx + 1).replace('\n', '<br>') + '<span style="color:var(--cyan)">|</span>';
+    if (++cidx > phrase.length) { deleting = true; setTimeout(type, 2200); return; }
+  } else {
+    el.innerHTML = phrase.slice(0, cidx - 1).replace('\n', '<br>') + '<span style="color:var(--cyan)">|</span>';
+    if (--cidx < 0) { deleting = false; pidx = (pidx + 1) % phrases.length; cidx = 0; }
+  }
+  setTimeout(type, deleting ? 40 : 80);
+}
+setTimeout(type, 700);
+
+/* ── COUNTERS ── */
+function counter(id, target, suffix, dec) {
+  const el = document.getElementById(id);
+  const dur = 2200, start = Date.now();
+  (function upd() {
+    const t = Math.min((Date.now() - start) / dur, 1);
+    const ease = 1 - Math.pow(1 - t, 3);
+    el.textContent = (dec ? (target*ease).toFixed(1) : Math.floor(target*ease).toLocaleString('ru')) + suffix;
+    if (t < 1) requestAnimationFrame(upd);
+  })();
+}
+setTimeout(() => {
+  counter('s1', 500000, '+');
+  counter('s2', 4.8, 'B', true);
+  counter('s3', 1000, 'ГБ');
+  counter('s4', 150000000, '');
+}, 900);
+
+/* ── INIT PROGRESS ── */
+function initProgress() {
+  localStorage.setItem('labProgress', JSON.stringify({
+    step: 1, labDone: false, quizDone: false, quizScore: 0, quizTotal: 8
+  }));
+}
+</script>
+</body>
+</html>

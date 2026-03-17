@@ -1,0 +1,2412 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Теория + Практика — Лаб. №9 Big Data</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    /* ── theory styles ── */
+    .pill-list{list-style:none;display:flex;flex-direction:column;gap:8px}
+    .pill-list li{display:flex;gap:10px;align-items:flex-start;font-size:.92rem;color:var(--text-m)}
+    .pill-list li::before{content:'▸';color:var(--cyan);flex-shrink:0;margin-top:1px}
+    .concept-icon{font-size:1.8rem;margin-bottom:10px}
+    .tool-card{background:var(--bg-card2);border:1px solid var(--border);border-radius:var(--r);
+      padding:18px;transition:all .25s}
+    .tool-card:hover{border-color:rgba(59,130,246,.38);background:var(--bg-card3)}
+    .scenario-progress{display:flex;gap:6px;margin-bottom:22px}
+    .sp-dot{width:10px;height:10px;border-radius:50%;background:var(--bg-card3);transition:background .3s}
+    .sp-dot.done{background:var(--green)}.sp-dot.active{background:var(--primary)}
+    .s-feedback{margin-top:16px;padding:14px 18px;border-radius:var(--r);
+      font-size:.9rem;display:none;line-height:1.6}
+    .s-feedback.correct{background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.3);color:var(--green)}
+    .s-feedback.wrong{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.3);color:var(--red)}
+    .s-feedback.show{display:block;animation:fadeIn .3s ease}
+    .next-btn{display:none}
+    .next-btn.show{display:inline-flex;margin-top:14px}
+    .highlight{color:var(--cyan);font-weight:600}
+    .mini-badge{display:inline-block;padding:2px 8px;border-radius:6px;font-size:.75rem;
+      font-weight:700;background:rgba(59,130,246,.15);color:var(--primary)}
+
+    /* ── lab / practice styles ── */
+    .task-panel{display:none}
+    .task-panel.active{display:block;animation:fadeInUp .4s ease}
+    .task-nav{display:flex;gap:8px;margin-bottom:28px}
+    .task-nav-btn{
+      flex:1;padding:12px;border-radius:var(--r);border:2px solid var(--border);
+      background:var(--bg-card2);color:var(--text-m);font-weight:600;
+      cursor:pointer;font-size:.88rem;text-align:center;transition:all .25s;
+      font-family:inherit;
+    }
+    .task-nav-btn.active{border-color:var(--primary);color:var(--primary);background:rgba(59,130,246,.08)}
+    .task-nav-btn.done{border-color:var(--green);color:var(--green);background:rgba(16,185,129,.08)}
+    .code-template{
+      background:#0d1117;border-radius:var(--r);padding:18px 20px;
+      font-family:'Cascadia Code','Fira Code',Consolas,monospace;
+      font-size:.86rem;line-height:1.75;overflow-x:auto;
+    }
+    .code-template .c-dim{color:#6e7681}
+    .code-template .c-kw{color:#ff7b72}
+    .code-template .c-fn{color:#d2a8ff}
+    .code-template .c-str{color:#a5d6a7}
+    .code-template .c-comment{color:#8b949e;font-style:italic}
+    .code-template .c-num{color:#f9a825}
+    .code-template .c-var{color:#79c0ff}
+    .method-fill{
+      display:inline-block;background:rgba(245,158,11,.15);
+      border:1px solid rgba(245,158,11,.5);border-radius:4px;
+      padding:2px 8px;color:var(--amber);font-style:italic;cursor:text;
+    }
+    .try-input{
+      background:rgba(15,22,41,1);border:2px solid rgba(59,130,246,.4);
+      border-radius:var(--r);padding:12px 18px;color:var(--text);
+      font-family:'Cascadia Code',Consolas,monospace;font-size:1rem;
+      outline:none;width:100%;transition:border-color .2s;
+    }
+    .try-input:focus{border-color:var(--primary)}
+    .try-input.ok{border-color:var(--green);color:var(--green);background:rgba(16,185,129,.04)}
+    .try-input.fail{border-color:var(--red);animation:shake .4s ease}
+    @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+    .run-btn{padding:12px 28px;border-radius:var(--r);background:rgba(16,185,129,.15);
+      border:1px solid rgba(16,185,129,.4);color:var(--green);font-weight:700;
+      cursor:pointer;font-family:inherit;font-size:.95rem;transition:all .25s;
+    }
+    .run-btn:hover{background:rgba(16,185,129,.25);transform:translateY(-1px)}
+    .run-btn:disabled{opacity:.45;cursor:not-allowed;transform:none}
+    .cursor-blink{animation:blink .9s infinite}
+    @keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+    .success-overlay{
+      position:fixed;inset:0;background:rgba(8,12,20,.85);z-index:200;
+      display:flex;align-items:center;justify-content:center;
+      display:none;
+    }
+    .success-modal{
+      background:var(--bg-card);border:1px solid rgba(16,185,129,.4);
+      border-radius:var(--r-lg);padding:40px;text-align:center;max-width:420px;
+      box-shadow:0 0 60px rgba(16,185,129,.2);
+    }
+    .confetti{position:absolute;border-radius:2px;animation:confetti-fall linear forwards}
+    @keyframes confetti-fall{
+      0%{transform:translateY(-20px) rotate(0deg);opacity:1}
+      100%{transform:translateY(80vh) rotate(720deg);opacity:0}
+    }
+    .hint-box{display:block!important;animation:fadeIn .4s ease}
+    .hint-toggle{background:none;border:none;color:var(--text-d);font-size:.8rem;
+      cursor:pointer;margin-top:8px;font-family:inherit;transition:color .2s}
+    .hint-toggle:hover{color:var(--amber)}
+    .api-card{background:var(--bg-card2);border:1px solid var(--border);border-radius:var(--r);
+      padding:18px;transition:all .25s;display:flex;flex-direction:column;gap:10px}
+    .api-card:hover{border-color:rgba(59,130,246,.38)}
+    .api-url{font-family:monospace;font-size:.78rem;color:var(--text-d);word-break:break-all;
+      padding:5px 9px;background:rgba(255,255,255,.04);border-radius:6px}
+    .api-run{padding:7px 16px;border-radius:8px;border:1px solid rgba(16,185,129,.4);
+      background:rgba(16,185,129,.1);color:var(--green);cursor:pointer;font-size:.82rem;
+      font-weight:600;font-family:inherit;transition:all .2s;white-space:nowrap;flex-shrink:0}
+    .api-run:hover{background:rgba(16,185,129,.22);transform:translateY(-1px)}
+    .api-run:disabled{opacity:.45;cursor:not-allowed;transform:none}
+    .api-input{width:100%;padding:6px 10px;border-radius:8px;border:1px solid var(--border);
+      background:rgba(255,255,255,.06);color:var(--text);font-family:monospace;font-size:.82rem;
+      outline:none;transition:border-color .2s;box-sizing:border-box}
+    .api-input:focus{border-color:rgba(59,130,246,.55);background:rgba(255,255,255,.09)}
+    .api-select{width:100%;padding:6px 10px;border-radius:8px;border:1px solid var(--border);
+      background:var(--bg-card2);color:var(--text);font-family:inherit;font-size:.82rem;
+      outline:none;cursor:pointer;transition:border-color .2s}
+    .api-select:focus{border-color:rgba(59,130,246,.55)}
+    .api-helper{font-size:.76rem;color:var(--text-d);margin-top:-4px}
+    .api-result{background:#0d1117;border:1px solid rgba(255,255,255,.07);border-radius:8px;
+      padding:12px 14px;font-family:monospace;font-size:.8rem;color:#e6edf3;
+      line-height:1.6;max-height:160px;overflow-y:auto;display:none;word-break:break-all}
+    .api-result.show{display:block;animation:fadeIn .3s ease}
+    .parse-step{display:flex;gap:12px;padding:14px 0;border-bottom:1px solid rgba(255,255,255,.05)}
+    .parse-step:last-child{border-bottom:none}
+    .parse-num{width:28px;height:28px;border-radius:50%;background:rgba(59,130,246,.15);
+      color:var(--primary);font-weight:800;font-size:.85rem;display:flex;
+      align-items:center;justify-content:center;flex-shrink:0;margin-top:2px}
+    .section-divider{height:1px;background:linear-gradient(90deg,transparent,var(--border),transparent);margin:40px 0}
+  </style>
+</head>
+<body class="page">
+
+<!-- ── TOP NAV ── -->
+<nav class="top-nav">
+  <a href="index.html" class="nav-brand" style="text-decoration:none">⚡ BigData Lab</a>
+  <div class="nav-steps">
+    <a href="index.html" class="nav-step done" title="Введение">✓</a>
+    <div class="nav-conn"></div>
+    <div class="nav-step active" title="Теория + Практика">2</div>
+    <div class="nav-conn"></div>
+    <a href="quiz.html" class="nav-step" title="Тест">3</a>
+    <div class="nav-conn"></div>
+    <a href="results.html" class="nav-step" title="Результаты">4</a>
+  </div>
+  <div class="nav-spacer"></div>
+</nav>
+
+<div class="container" style="padding-top:32px;padding-bottom:64px">
+
+  <!-- Page header -->
+  <div style="margin-bottom:32px" class="anim">
+    <div class="section-label">Шаг 2 / 4</div>
+    <h1 class="section-title">Теория + Практика: Анализ социальных сетей</h1>
+    <p class="section-sub">Изучи концепции, попрактикуйся с API и закрепи знания.</p>
+  </div>
+
+  <!-- TABS -->
+  <div class="tabs anim d1" id="tabBar" style="flex-wrap:wrap">
+    <button class="tab-btn active" onclick="switchTab(0)">🌐 Введение</button>
+    <button class="tab-btn" onclick="switchTab(1)">📡 Источники</button>
+    <button class="tab-btn" onclick="switchTab(2)">🔧 Обработка</button>
+    <button class="tab-btn" onclick="switchTab(3)">🔍 Анализ</button>
+    <button class="tab-btn" onclick="switchTab(4)">⚙️ Инструменты</button>
+    <button class="tab-btn" onclick="switchTab(5)">🎯 Кейсы</button>
+    <button class="tab-btn" onclick="switchTab(6)" style="border-color:rgba(245,158,11,.35);color:var(--amber)">🏢 Индустрия</button>
+    <button class="tab-btn" onclick="switchTab(7)" style="border-color:rgba(16,185,129,.35);color:var(--green)">💻 Практика</button>
+    <button class="tab-btn" onclick="switchTab(8)" style="border-color:rgba(139,92,246,.35);color:var(--purple)">🌐 Бонус</button>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════ -->
+  <!-- TAB 0: ВВЕДЕНИЕ -->
+  <!-- ══════════════════════════════════════════════════ -->
+  <div class="tab-panel active" id="tab0">
+    <div class="card-grid">
+      <div class="card" style="border-color:rgba(6,182,212,.3)">
+        <div class="concept-icon">📊</div>
+        <div class="card-title">Что такое SNA?</div>
+        <div class="card-body">
+          <b>Social Network Analysis</b> — это изучение структуры и динамики социальных связей с помощью методов теории графов и статистики.<br><br>
+          Каждый пользователь = <span class="highlight">вершина</span>, каждая связь (подписка, сообщение, лайк) = <span class="highlight">ребро</span>.
+        </div>
+      </div>
+      <div class="card" style="border-color:rgba(139,92,246,.3)">
+        <div class="concept-icon">🎯</div>
+        <div class="card-title">Ключевые задачи</div>
+        <ul class="pill-list" style="margin-top:6px">
+          <li>Мониторинг репутации брендов</li>
+          <li>Выявление трендов и популярных тем</li>
+          <li>Анализ поведения и предпочтений</li>
+          <li>Сегментация и персонализация</li>
+          <li>Поиск лидеров мнений (KOL)</li>
+        </ul>
+      </div>
+      <div class="card" style="border-color:rgba(245,158,11,.3)">
+        <div class="concept-icon">💡</div>
+        <div class="card-title">Почему Big Data?</div>
+        <div class="card-body">
+          Каждую минуту:
+          <ul class="pill-list" style="margin-top:8px">
+            <li><b>500 000+</b> твитов опубликовано</li>
+            <li><b>4.5 млн</b> видео просмотрено в YouTube</li>
+            <li><b>65 000</b> фото загружено в Instagram</li>
+            <li><b>12 млн</b> сообщений в Telegram</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:20px;text-align:center">
+      <div style="font-weight:700;margin-bottom:16px;color:var(--text-m);font-size:.9rem;text-transform:uppercase;letter-spacing:.08em">Модель социального графа</div>
+      <svg viewBox="0 0 500 200" style="width:100%;max-width:500px;height:auto">
+        <defs>
+          <radialGradient id="ng"><stop offset="0%" stop-color="#3b82f6"/><stop offset="100%" stop-color="#1d4ed8"/></radialGradient>
+          <radialGradient id="ng2"><stop offset="0%" stop-color="#8b5cf6"/><stop offset="100%" stop-color="#6d28d9"/></radialGradient>
+          <radialGradient id="ng3"><stop offset="0%" stop-color="#06b6d4"/><stop offset="100%" stop-color="#0891b2"/></radialGradient>
+        </defs>
+        <line x1="150" y1="100" x2="250" y2="60" stroke="rgba(59,130,246,.35)" stroke-width="1.5"/>
+        <line x1="150" y1="100" x2="250" y2="140" stroke="rgba(59,130,246,.35)" stroke-width="1.5"/>
+        <line x1="250" y1="60" x2="350" y2="80" stroke="rgba(59,130,246,.35)" stroke-width="1.5"/>
+        <line x1="250" y1="60" x2="350" y2="40" stroke="rgba(59,130,246,.2)" stroke-width="1"/>
+        <line x1="250" y1="140" x2="350" y2="120" stroke="rgba(59,130,246,.35)" stroke-width="1.5"/>
+        <line x1="250" y1="140" x2="350" y2="160" stroke="rgba(59,130,246,.2)" stroke-width="1"/>
+        <line x1="350" y1="80" x2="350" y2="120" stroke="rgba(59,130,246,.25)" stroke-width="1"/>
+        <circle cx="150" cy="100" r="22" fill="url(#ng2)" opacity=".9"/>
+        <text x="150" y="105" text-anchor="middle" fill="#fff" font-size="10" font-weight="700">ЛМ</text>
+        <circle cx="250" cy="60" r="14" fill="url(#ng)" opacity=".85"/>
+        <circle cx="250" cy="140" r="14" fill="url(#ng)" opacity=".85"/>
+        <circle cx="350" cy="80" r="10" fill="url(#ng3)" opacity=".8"/>
+        <circle cx="350" cy="40" r="7" fill="url(#ng3)" opacity=".7"/>
+        <circle cx="350" cy="120" r="10" fill="url(#ng3)" opacity=".8"/>
+        <circle cx="350" cy="160" r="7" fill="url(#ng3)" opacity=".7"/>
+        <text x="150" y="132" text-anchor="middle" fill="#8b5cf6" font-size="9">Лидер мнений</text>
+        <text x="250" y="44" text-anchor="middle" fill="#94a3b8" font-size="9">Вершина</text>
+        <text x="310" y="100" text-anchor="middle" fill="#94a3b8" font-size="9">Рёбра</text>
+      </svg>
+      <p style="font-size:.82rem;color:var(--text-d);margin-top:8px">Лидер мнений (ЛМ) имеет наибольшую центральность — связан со многими пользователями</p>
+    </div>
+
+    <div style="text-align:right;margin-top:24px">
+      <button class="btn btn-primary" onclick="switchTab(1)">Источники данных →</button>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════ -->
+  <!-- TAB 1: ИСТОЧНИКИ ДАННЫХ -->
+  <!-- ══════════════════════════════════════════════════ -->
+  <div class="tab-panel" id="tab1">
+    <div class="grid-2" style="margin-bottom:20px">
+      <div class="card" style="border-color:rgba(59,130,246,.3)">
+        <div class="card-title" style="color:var(--primary);margin-bottom:14px">🔗 API Социальных Сетей</div>
+        <div class="timeline">
+          <div class="tl-item">
+            <div class="tl-title">VK API <span class="mini-badge">Используем сегодня</span></div>
+            <div class="tl-body">Пользователи, посты, комментарии, группы. OAuth 2.0 авторизация, JSON-формат.</div>
+          </div>
+          <div class="tl-item">
+            <div class="tl-title">Telegram Bot API</div>
+            <div class="tl-body">Сообщения каналов, реакции, участники через getUpdates / getChatMember.</div>
+          </div>
+          <div class="tl-item">
+            <div class="tl-title">LinkedIn API</div>
+            <div class="tl-body">Профессиональные данные, активность, связи. Строгие ограничения доступа.</div>
+          </div>
+          <div class="tl-item" style="padding-bottom:0">
+            <div class="tl-title">Twitter / X API</div>
+            <div class="tl-body">Твиты в реальном времени через Streaming API. Метаданные: геолокация, ретвиты.</div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="card" style="border-color:rgba(245,158,11,.3);margin-bottom:18px">
+          <div class="card-title" style="color:var(--amber);margin-bottom:12px">🔍 Web Scraping</div>
+          <ul class="pill-list">
+            <li>BeautifulSoup + Requests — разбор HTML-страниц</li>
+            <li>Selenium — автоматизация браузера (JS-сайты)</li>
+            <li>Scrapy — фреймворк для промышленного скрейпинга</li>
+          </ul>
+          <div style="margin-top:14px;padding:10px 14px;border-radius:8px;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.25)">
+            <div style="font-size:.82rem;color:var(--red);font-weight:600">⚠️ Юридические ограничения</div>
+            <div style="font-size:.8rem;color:var(--text-m);margin-top:4px">Необходимо соблюдать robots.txt и ToS платформы. Нарушение = блокировка или штраф.</div>
+          </div>
+        </div>
+        <div class="card" style="border-color:rgba(16,185,129,.3)">
+          <div class="card-title" style="color:var(--green);margin-bottom:12px">🗃️ Внешние источники</div>
+          <ul class="pill-list">
+            <li>CRM-системы — данные о клиентах</li>
+            <li>Транзакции и покупки</li>
+            <li>Открытые датасеты (Kaggle, data.gov)</li>
+            <li>Данные рекламных платформ</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="border-color:rgba(6,182,212,.25)">
+      <div style="font-weight:700;margin-bottom:16px">📝 Пример ответа VK API</div>
+      <div class="code-editor">
+        <div class="code-header">
+          <div class="code-dots"><div class="code-dot r"></div><div class="code-dot y"></div><div class="code-dot g"></div></div>
+          <span class="code-lang">JSON — vk.com/method/users.get</span>
+        </div>
+        <pre style="padding:18px;color:#e6edf3;font-size:.84rem;line-height:1.7;overflow-x:auto"><span style="color:#80cbc4">{</span>
+  <span style="color:#80cbc4">"response"</span>: [<span style="color:#80cbc4">{</span>
+    <span style="color:#80cbc4">"id"</span>:            <span style="color:#f9a825">1</span>,
+    <span style="color:#80cbc4">"first_name"</span>:    <span style="color:#a5d6a7">"Павел"</span>,
+    <span style="color:#80cbc4">"last_name"</span>:     <span style="color:#a5d6a7">"Дуров"</span>,
+    <span style="color:#80cbc4">"followers_count"</span>: <span style="color:#f9a825">8245730</span>,
+    <span style="color:#80cbc4">"city"</span>: <span style="color:#80cbc4">{</span>
+      <span style="color:#80cbc4">"id"</span>: <span style="color:#f9a825">2</span>, <span style="color:#80cbc4">"title"</span>: <span style="color:#a5d6a7">"Санкт-Петербург"</span>
+    <span style="color:#80cbc4">}</span>
+  <span style="color:#80cbc4">}</span>]
+<span style="color:#80cbc4">}</span></pre>
+      </div>
+    </div>
+    <div style="text-align:right;margin-top:24px">
+      <button class="btn btn-outline" style="margin-right:10px" onclick="switchTab(0)">← Назад</button>
+      <button class="btn btn-primary" onclick="switchTab(2)">Обработка данных →</button>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════ -->
+  <!-- TAB 2: ОБРАБОТКА -->
+  <!-- ══════════════════════════════════════════════════ -->
+  <div class="tab-panel" id="tab2">
+    <div class="grid-2" style="margin-bottom:20px">
+      <div class="card">
+        <div class="card-title" style="margin-bottom:16px">🧹 Очистка данных</div>
+        <div class="timeline">
+          <div class="tl-item">
+            <div class="tl-title">Дубликаты</div>
+            <div class="tl-body">Удаление повторяющихся записей — один пользователь не должен считаться дважды.</div>
+          </div>
+          <div class="tl-item">
+            <div class="tl-title">Пропущенные значения</div>
+            <div class="tl-body">Заполнение (импутация) или удаление строк с NaN/null. Выбор метода зависит от контекста.</div>
+          </div>
+          <div class="tl-item" style="padding-bottom:0">
+            <div class="tl-title">Некорректные записи</div>
+            <div class="tl-body">Боты, спам, фейковые аккаунты — фильтрация по признакам активности.</div>
+          </div>
+        </div>
+      </div>
+      <div class="card" style="border-color:rgba(139,92,246,.3)">
+        <div class="card-title" style="margin-bottom:16px">🔤 Обработка текстов (NLP)</div>
+        <div class="timeline">
+          <div class="tl-item">
+            <div class="tl-title">Токенизация</div>
+            <div class="tl-body">"Анализ больших данных" → ["Анализ", "больших", "данных"]</div>
+          </div>
+          <div class="tl-item">
+            <div class="tl-title">Лемматизация / Стемминг</div>
+            <div class="tl-body">"анализировал", "анализирует" → <b>анализировать</b> (базовая форма)</div>
+          </div>
+          <div class="tl-item">
+            <div class="tl-title">Стоп-слова</div>
+            <div class="tl-body">Удаление: "и", "в", "на", "что" — не несут смысловой нагрузки для анализа.</div>
+          </div>
+          <div class="tl-item" style="padding-bottom:0">
+            <div class="tl-title">Векторизация</div>
+            <div class="tl-body">TF-IDF, Word2Vec, BERT — перевод текста в числовой вектор для ML-модели.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card-grid">
+      <div class="tool-card">
+        <div style="font-size:1.5rem;margin-bottom:8px">🍃</div>
+        <div style="font-weight:700;margin-bottom:6px">MongoDB <span class="tag tag-green">NoSQL</span></div>
+        <div class="card-body">Документоориентированная СУБД. Хранит JSON-подобные документы. Идеальна для неструктурированных данных соцсетей.</div>
+      </div>
+      <div class="tool-card">
+        <div style="font-size:1.5rem;margin-bottom:8px">🗄️</div>
+        <div style="font-weight:700;margin-bottom:6px">HDFS <span class="tag tag-amber">Hadoop</span></div>
+        <div class="card-body">Распределённая файловая система. Данные разбиваются на блоки и хранятся на множестве нод. Масштабируется до петебайт.</div>
+      </div>
+      <div class="tool-card">
+        <div style="font-size:1.5rem;margin-bottom:8px">🌊</div>
+        <div style="font-weight:700;margin-bottom:6px">Data Lake <span class="tag tag-blue">Raw Storage</span></div>
+        <div class="card-body">Хранилище сырых данных в исходном формате. Обрабатывается по запросу. Гибкость + низкая стоимость хранения.</div>
+      </div>
+      <div class="tool-card">
+        <div style="font-size:1.5rem;margin-bottom:8px">🐘</div>
+        <div style="font-weight:700;margin-bottom:6px">Cassandra <span class="tag tag-purple">NoSQL</span></div>
+        <div class="card-body">Колоночная СУБД. Высокая доступность — нет единой точки отказа. Используется в Facebook для сообщений.</div>
+      </div>
+    </div>
+
+    <div style="text-align:right;margin-top:24px">
+      <button class="btn btn-outline" style="margin-right:10px" onclick="switchTab(1)">← Назад</button>
+      <button class="btn btn-primary" onclick="switchTab(3)">Методы анализа →</button>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════ -->
+  <!-- TAB 3: МЕТОДЫ АНАЛИЗА -->
+  <!-- ══════════════════════════════════════════════════ -->
+  <div class="tab-panel" id="tab3">
+    <div class="card-grid" style="margin-bottom:20px">
+      <div class="card" style="border-color:rgba(6,182,212,.3)">
+        <div class="concept-icon">💬</div>
+        <div class="card-title">Text Mining — Добыча текстов</div>
+        <ul class="pill-list" style="margin-top:10px">
+          <li><b style="color:var(--cyan)">Sentiment Analysis</b> — тональность текста (😊 / 😐 / 😠)</li>
+          <li><b style="color:var(--cyan)">Topic Modeling</b> — скрытые темы; методы: LDA, NMF</li>
+          <li><b style="color:var(--cyan)">NER</b> — Named Entity Recognition: имена, компании, города</li>
+          <li><b style="color:var(--cyan)">Summarization</b> — автоматическое реферирование текстов</li>
+        </ul>
+        <div style="margin-top:14px;padding:10px;border-radius:8px;background:rgba(6,182,212,.06);border:1px solid rgba(6,182,212,.2)">
+          <div style="font-size:.82rem;color:var(--cyan)">💡 Пример:</div>
+          <div style="font-size:.82rem;color:var(--text-m);margin-top:4px">"Обожаю этот телефон!" → <b style="color:var(--green)">Позитивный</b> · 0.94<br>"Сломался через месяц" → <b style="color:var(--red)">Негативный</b> · 0.88</div>
+        </div>
+      </div>
+      <div class="card" style="border-color:rgba(139,92,246,.3)">
+        <div class="concept-icon">🕸️</div>
+        <div class="card-title">Анализ Графов (SNA)</div>
+        <ul class="pill-list" style="margin-top:10px">
+          <li><b style="color:var(--purple)">Центральность (Centrality)</b> — влиятельность вершины</li>
+          <li><b style="color:var(--purple)">Кластеризация</b> — выявление сообществ/групп</li>
+          <li><b style="color:var(--purple)">Pagerank</b> — алгоритм ранжирования (как у Google)</li>
+          <li><b style="color:var(--purple)">Betweenness</b> — узлы-посредники между сообществами</li>
+        </ul>
+        <div style="margin-top:14px;padding:10px;border-radius:8px;background:rgba(139,92,246,.06);border:1px solid rgba(139,92,246,.2)">
+          <div style="font-size:.82rem;color:var(--purple)">💡 Применение:</div>
+          <div style="font-size:.82rem;color:var(--text-m);margin-top:4px">Блогер с высокой betweenness — соединяет разные аудитории → идеален для viral-кампаний</div>
+        </div>
+      </div>
+      <div class="card" style="border-color:rgba(245,158,11,.3)">
+        <div class="concept-icon">🖼️</div>
+        <div class="card-title">Анализ Визуального Контента</div>
+        <ul class="pill-list" style="margin-top:10px">
+          <li><b style="color:var(--amber)">CNN / YOLO</b> — классификация объектов на фото</li>
+          <li><b style="color:var(--amber)">Face Recognition</b> — идентификация лиц</li>
+          <li><b style="color:var(--amber)">OpenCV</b> — обработка и анализ video/image</li>
+          <li><b style="color:var(--amber)">Метаданные EXIF</b> — геолокация, дата, устройство</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="card" style="border-color:rgba(6,182,212,.2)">
+      <div style="font-weight:700;margin-bottom:16px">🗂️ Topic Modeling — LDA (визуализация)</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;max-width:700px">
+        <div style="background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.25);border-radius:10px;padding:14px">
+          <div style="font-size:.78rem;font-weight:700;color:var(--primary);margin-bottom:8px">ТЕМА 1: Технологии</div>
+          <div style="font-size:.8rem;color:var(--text-m)">смартфон · приложение · обновление · iOS · Android · разработка</div>
+        </div>
+        <div style="background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.25);border-radius:10px;padding:14px">
+          <div style="font-size:.78rem;font-weight:700;color:var(--green);margin-bottom:8px">ТЕМА 2: Спорт</div>
+          <div style="font-size:.8rem;color:var(--text-m)">матч · победа · команда · игрок · гол · чемпионат</div>
+        </div>
+        <div style="background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.25);border-radius:10px;padding:14px">
+          <div style="font-size:.78rem;font-weight:700;color:var(--amber);margin-bottom:8px">ТЕМА 3: Политика</div>
+          <div style="font-size:.8rem;color:var(--text-m)">выборы · кандидат · голосование · партия · закон</div>
+        </div>
+      </div>
+      <p style="font-size:.8rem;color:var(--text-d);margin-top:12px">LDA автоматически кластеризует 10 000 постов по скрытым темам без разметки</p>
+    </div>
+
+    <!-- Behavioral Analysis & Psycholinguistics (from lecture) -->
+    <div class="grid-2" style="margin-top:20px;margin-bottom:20px">
+      <div class="card" style="border-color:rgba(16,185,129,.3)">
+        <div class="concept-icon">🧠</div>
+        <div class="card-title">Психолингвистический анализ</div>
+        <div class="card-body" style="margin-bottom:12px">
+          Модель <b>Big Five</b> — определение типа личности по текстам в соцсетях:
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <div style="padding:8px 12px;background:rgba(16,185,129,.06);border:1px solid rgba(16,185,129,.2);border-radius:8px;font-size:.8rem">
+            <b style="color:var(--green)">Экстраверсия</b><br><span style="color:var(--text-d)">«вечеринка», «друзья»</span>
+          </div>
+          <div style="padding:8px 12px;background:rgba(139,92,246,.06);border:1px solid rgba(139,92,246,.2);border-radius:8px;font-size:.8rem">
+            <b style="color:var(--purple)">Открытость</b><br><span style="color:var(--text-d)">«искусство», «путешествия»</span>
+          </div>
+          <div style="padding:8px 12px;background:rgba(59,130,246,.06);border:1px solid rgba(59,130,246,.2);border-radius:8px;font-size:.8rem">
+            <b style="color:var(--primary)">Добросовестность</b><br><span style="color:var(--text-d)">«план», «цель», «успех»</span>
+          </div>
+          <div style="padding:8px 12px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2);border-radius:8px;font-size:.8rem">
+            <b style="color:var(--amber)">Невротизм</b><br><span style="color:var(--text-d)">«стресс», «тревога»</span>
+          </div>
+        </div>
+        <div style="margin-top:10px;padding:8px 12px;background:rgba(6,182,212,.06);border-radius:8px;font-size:.8rem;color:var(--text-m)">
+          Используется в HR-скрининге и кредитном скоринге (оценка надёжности заёмщика по текстам профиля)
+        </div>
+      </div>
+      <div class="card" style="border-color:rgba(245,158,11,.3)">
+        <div class="concept-icon">📈</div>
+        <div class="card-title">Анализ поведения и Influence Score</div>
+        <ul class="pill-list" style="margin-top:10px">
+          <li><b style="color:var(--amber)">Временные паттерны</b> — время активности, «сова» или «жаворонок»</li>
+          <li><b style="color:var(--amber)">Контентные предпочтения</b> — фото vs. текст, темы лайков</li>
+          <li><b style="color:var(--amber)">Engagement Rate</b> — (лайки + комменты) / подписчики</li>
+          <li><b style="color:var(--amber)">Influence Score</b> — формула: активность × соц.капитал × вовлечённость</li>
+        </ul>
+        <div style="margin-top:14px;padding:10px;border-radius:8px;background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2)">
+          <div style="font-size:.82rem;color:var(--amber)">💡 Формула:</div>
+          <div style="font-size:.82rem;color:var(--text-m);margin-top:4px;font-family:monospace">
+            Score = posts×0.1 + log(followers)×10 + avg_likes×0.5 + ER×1000
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="text-align:right;margin-top:24px">
+      <button class="btn btn-outline" style="margin-right:10px" onclick="switchTab(2)">← Назад</button>
+      <button class="btn btn-primary" onclick="switchTab(4)">Инструменты →</button>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════ -->
+  <!-- TAB 4: ИНСТРУМЕНТЫ -->
+  <!-- ══════════════════════════════════════════════════ -->
+  <div class="tab-panel" id="tab4">
+    <div class="grid-2" style="margin-bottom:20px">
+      <div class="card" style="border-color:rgba(245,158,11,.3)">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+          <div style="font-size:1.6rem">⚡</div>
+          <div>
+            <div style="font-weight:800;font-size:1.05rem">Apache Spark</div>
+            <span class="tag tag-amber">Big Data Engine</span>
+          </div>
+        </div>
+        <ul class="pill-list">
+          <li><b>Spark Core</b> — распределённая обработка данных (RDD / DataFrame)</li>
+          <li><b>Spark Streaming</b> — анализ данных <b>в реальном времени</b> (Twitter, Kafka)</li>
+          <li><b>MLlib</b> — библиотека ML: классификация, кластеризация, рекомендации</li>
+          <li><b>GraphX</b> — обработка графов в распределённой среде</li>
+        </ul>
+        <div style="margin-top:10px;padding:8px 12px;background:rgba(245,158,11,.06);border-radius:8px;font-size:.8rem;color:var(--amber)">
+          В 100× быстрее Hadoop MapReduce для задач в памяти
+        </div>
+      </div>
+      <div class="card" style="border-color:rgba(59,130,246,.3)">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+          <div style="font-size:1.6rem">🐘</div>
+          <div>
+            <div style="font-weight:800;font-size:1.05rem">Apache Hadoop</div>
+            <span class="tag tag-blue">Distributed Storage</span>
+          </div>
+        </div>
+        <ul class="pill-list">
+          <li><b>HDFS</b> — распределённое хранилище (блоки по 128 МБ)</li>
+          <li><b>MapReduce</b> — параллельная обработка через map/reduce функции</li>
+          <li><b>YARN</b> — менеджер ресурсов кластера</li>
+          <li><b>Hive</b> — SQL-подобные запросы к HDFS</li>
+        </ul>
+      </div>
+    </div>
+
+    <div style="margin-bottom:8px;font-weight:700">🐍 Python-библиотеки</div>
+    <div class="card-grid">
+      <div class="tool-card">
+        <div style="font-weight:700;margin-bottom:4px;color:var(--primary)">pandas</div>
+        <div class="card-body">Обработка табличных данных. DataFrame для структурированных данных соцсетей.</div>
+        <div style="margin-top:8px"><span class="tag tag-blue">DataFrame</span><span class="tag tag-blue">CSV/JSON</span></div>
+      </div>
+      <div class="tool-card">
+        <div style="font-weight:700;margin-bottom:4px;color:var(--cyan)">NLTK / SpaCy</div>
+        <div class="card-body">Обработка естественного языка: токенизация, лемматизация, NER, парсинг зависимостей.</div>
+        <div style="margin-top:8px"><span class="tag tag-cyan">NLP</span><span class="tag tag-cyan">Русский язык</span></div>
+      </div>
+      <div class="tool-card">
+        <div style="font-weight:700;margin-bottom:4px;color:var(--purple)">NetworkX</div>
+        <div class="card-body">Создание и анализ графов социальных сетей. Центральность, кластеры, shortest path.</div>
+        <div style="margin-top:8px"><span class="tag tag-purple">Графы</span><span class="tag tag-purple">SNA</span></div>
+      </div>
+      <div class="tool-card">
+        <div style="font-weight:700;margin-bottom:4px;color:var(--amber)">Matplotlib / Seaborn</div>
+        <div class="card-body">Визуализация данных: тепловые карты, графики, дашборды для отчётов.</div>
+        <div style="margin-top:8px"><span class="tag tag-amber">Визуализация</span></div>
+      </div>
+    </div>
+    <div style="text-align:right;margin-top:24px">
+      <button class="btn btn-outline" style="margin-right:10px" onclick="switchTab(3)">← Назад</button>
+      <button class="btn btn-primary" onclick="switchTab(5)">Кейсы →</button>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════ -->
+  <!-- TAB 5: КЕЙСЫ -->
+  <!-- ══════════════════════════════════════════════════ -->
+  <div class="tab-panel" id="tab5">
+    <div style="margin-bottom:28px">
+      <div class="section-label">Интерактивный сценарий</div>
+      <h2 style="font-size:1.3rem;font-weight:800;margin-bottom:6px">Принимай решения как дата-аналитик</h2>
+      <p style="font-size:.9rem;color:var(--text-m)">Выбери правильный шаг — получи объяснение. Два реальных кейса.</p>
+    </div>
+
+    <div style="display:flex;gap:10px;margin-bottom:22px">
+      <button class="btn btn-primary" id="caseBtn0" onclick="switchCase(0)" style="font-size:.88rem;padding:9px 20px">📱 Мониторинг бренда</button>
+      <button class="btn btn-outline" id="caseBtn1" onclick="switchCase(1)" style="font-size:.88rem;padding:9px 20px">🗳️ Политический анализ</button>
+    </div>
+
+    <!-- CASE 0: Brand -->
+    <div id="case0">
+      <div class="scenario">
+        <div class="scenario-progress" id="prog0">
+          <div class="sp-dot active"></div><div class="sp-dot"></div><div class="sp-dot"></div><div class="sp-dot"></div>
+        </div>
+        <div class="scenario-step active" id="c0s0">
+          <div class="scenario-title">Ситуация: Запуск нового смартфона</div>
+          <div class="scenario-context">📱 Компания выпустила флагман. Маркетинг хочет знать реакцию аудитории. С чего ты начнёшь?</div>
+          <div class="scenario-choices">
+            <button class="scenario-choice" onclick="answer(0,0,0)">A) Анализ продаж в CRM</button>
+            <button class="scenario-choice" onclick="answer(0,0,1)">B) Сбор постов и упоминаний из ВКонтакте и Telegram</button>
+            <button class="scenario-choice" onclick="answer(0,0,2)">C) Запуск рекламной кампании</button>
+          </div>
+          <div class="s-feedback" id="fb-c0s0"></div>
+          <button class="btn btn-success next-btn" id="next-c0s0" onclick="nextStep(0,1)">Следующий шаг →</button>
+        </div>
+        <div class="scenario-step" id="c0s1">
+          <div class="scenario-title">Данные собраны: 15 000 постов</div>
+          <div class="scenario-context">📊 У тебя 15 000 постов о продукте. Как автоматически определить, как люди относятся к телефону?</div>
+          <div class="scenario-choices">
+            <button class="scenario-choice" onclick="answer(0,1,0)">A) Topic Modeling (LDA)</button>
+            <button class="scenario-choice" onclick="answer(0,1,1)">B) Sentiment Analysis (анализ тональности)</button>
+            <button class="scenario-choice" onclick="answer(0,1,2)">C) Named Entity Recognition (NER)</button>
+          </div>
+          <div class="s-feedback" id="fb-c0s1"></div>
+          <button class="btn btn-success next-btn" id="next-c0s1" onclick="nextStep(0,2)">Следующий шаг →</button>
+        </div>
+        <div class="scenario-step" id="c0s2">
+          <div class="scenario-title">Результат: 65% позитив, 20% нейтрал, 15% негатив</div>
+          <div class="scenario-context">🔍 Большинство пользователей довольны. Но 15% пишут негативно. Что далее?</div>
+          <div class="scenario-choices">
+            <button class="scenario-choice" onclick="answer(0,2,0)">A) Удалить негативные комментарии</button>
+            <button class="scenario-choice" onclick="answer(0,2,1)">B) Создать дашборд динамики упоминаний и передать в PR-отдел</button>
+            <button class="scenario-choice" onclick="answer(0,2,2)">C) Ничего не делать — 15% это нормально</button>
+          </div>
+          <div class="s-feedback" id="fb-c0s2"></div>
+          <button class="btn btn-success next-btn" id="next-c0s2" onclick="nextStep(0,3)">Итог кейса →</button>
+        </div>
+        <div class="scenario-step" id="c0s3">
+          <div style="text-align:center;padding:20px 0">
+            <div style="font-size:3rem;margin-bottom:12px">🎉</div>
+            <div style="font-size:1.3rem;font-weight:800;color:var(--green);margin-bottom:10px">Кейс завершён!</div>
+            <div style="font-size:.95rem;color:var(--text-m);max-width:500px;margin:0 auto;line-height:1.7">
+              Ты прошёл полный цикл: <b>сбор → Sentiment Analysis → дашборд</b>.<br>
+              Такой конвейер используется в реальных компаниях для brand monitoring в реальном времени.
+            </div>
+            <div style="display:flex;gap:12px;justify-content:center;margin-top:20px;flex-wrap:wrap">
+              <span class="badge badge-gold">🌟 Аналитик брендов</span>
+              <span class="badge badge-blue">📊 Sentiment Pro</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CASE 1: Political -->
+    <div id="case1" style="display:none">
+      <div class="scenario">
+        <div class="scenario-progress" id="prog1">
+          <div class="sp-dot active"></div><div class="sp-dot"></div><div class="sp-dot"></div>
+        </div>
+        <div class="scenario-step active" id="c1s0">
+          <div class="scenario-title">Выборы: появились аномальные аккаунты</div>
+          <div class="scenario-context">🗳️ В сети 10 000 аккаунтов публикуют одинаковый контент. Как выявить лидеров распространения фейков?</div>
+          <div class="scenario-choices">
+            <button class="scenario-choice" onclick="answer(1,0,0)">A) Sentiment Analysis по всем постам</button>
+            <button class="scenario-choice" onclick="answer(1,0,1)">B) Построить социальный граф и найти узлы с высокой betweenness centrality</button>
+            <button class="scenario-choice" onclick="answer(1,0,2)">C) Analysиз только хэштегов</button>
+          </div>
+          <div class="s-feedback" id="fb-c1s0"></div>
+          <button class="btn btn-success next-btn" id="next-c1s0" onclick="nextStep(1,1)">Следующий шаг →</button>
+        </div>
+        <div class="scenario-step" id="c1s1">
+          <div class="scenario-title">Граф построен, выявлены 5 ключевых узлов</div>
+          <div class="scenario-context">🕵️ Пять аккаунтов распространяют 80% фейкового контента. Как оценить истинность публикаций?</div>
+          <div class="scenario-choices">
+            <button class="scenario-choice" onclick="answer(1,1,0)">A) Сравнение с официальными источниками через NLP + fact-checking базы</button>
+            <button class="scenario-choice" onclick="answer(1,1,1)">B) Посмотреть количество подписчиков</button>
+            <button class="scenario-choice" onclick="answer(1,1,2)">C) Спросить у пользователей в комментариях</button>
+          </div>
+          <div class="s-feedback" id="fb-c1s1"></div>
+          <button class="btn btn-success next-btn" id="next-c1s1" onclick="nextStep(1,2)">Итог кейса →</button>
+        </div>
+        <div class="scenario-step" id="c1s2">
+          <div style="text-align:center;padding:20px 0">
+            <div style="font-size:3rem;margin-bottom:12px">🛡️</div>
+            <div style="font-size:1.3rem;font-weight:800;color:var(--green);margin-bottom:10px">Отлично!</div>
+            <div style="font-size:.95rem;color:var(--text-m);max-width:500px;margin:0 auto;line-height:1.7">
+              Ты использовал <b>Graph Analysis + NLP + Fact-checking</b> — реальный стек для борьбы с дезинформацией.<br>
+              Именно так работают системы Meta Content Integrity и EU Disinfo Lab.
+            </div>
+            <div style="display:flex;gap:12px;justify-content:center;margin-top:20px;flex-wrap:wrap">
+              <span class="badge badge-gold">🕵️ Детектор фейков</span>
+              <span class="badge badge-blue">🌐 SNA Expert</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Flip Cards -->
+    <div style="margin-top:36px">
+      <div style="font-weight:700;margin-bottom:16px;font-size:1.05rem">🃏 Карточки для запоминания <span style="font-size:.8rem;color:var(--text-d)">— наведи или нажми</span></div>
+      <div class="card-grid">
+        <div class="flip-card" style="height:180px">
+          <div class="flip-inner">
+            <div class="flip-f">
+              <div style="font-size:1.6rem;margin-bottom:8px">🔤</div>
+              <div style="font-weight:700">LDA</div>
+              <div style="font-size:.8rem;color:var(--text-m);margin-top:6px">Что это такое?</div>
+            </div>
+            <div class="flip-b">
+              <div style="font-weight:700;color:var(--purple);margin-bottom:8px">Latent Dirichlet Allocation</div>
+              <div style="font-size:.85rem;color:var(--text-m)">Вероятностная модель для извлечения скрытых тем из коллекции текстов без разметки</div>
+            </div>
+          </div>
+        </div>
+        <div class="flip-card" style="height:180px">
+          <div class="flip-inner">
+            <div class="flip-f">
+              <div style="font-size:1.6rem;margin-bottom:8px">🎯</div>
+              <div style="font-weight:700">NER</div>
+              <div style="font-size:.8rem;color:var(--text-m);margin-top:6px">Что это такое?</div>
+            </div>
+            <div class="flip-b">
+              <div style="font-weight:700;color:var(--cyan);margin-bottom:8px">Named Entity Recognition</div>
+              <div style="font-size:.85rem;color:var(--text-m)">Выявление именованных сущностей в тексте: имён людей, организаций, мест, дат</div>
+            </div>
+          </div>
+        </div>
+        <div class="flip-card" style="height:180px">
+          <div class="flip-inner">
+            <div class="flip-f">
+              <div style="font-size:1.6rem;margin-bottom:8px">🌊</div>
+              <div style="font-weight:700">Data Lake</div>
+              <div style="font-size:.8rem;color:var(--text-m);margin-top:6px">Vs Data Warehouse?</div>
+            </div>
+            <div class="flip-b">
+              <div style="font-weight:700;color:var(--primary);margin-bottom:8px">Raw Data Storage</div>
+              <div style="font-size:.85rem;color:var(--text-m)">Хранит сырые данные любого формата. Data Warehouse = обработанные + структурированные данные</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Real-world cases from lecture -->
+    <div style="margin-top:36px">
+      <div style="font-weight:700;margin-bottom:16px;font-size:1.05rem">📊 Кейсы из индустрии <span style="font-size:.8rem;color:var(--text-d)">— реальные применения</span></div>
+      <div class="card-grid">
+        <div class="card" style="border-color:rgba(59,130,246,.3)">
+          <div style="font-size:1.3rem;margin-bottom:8px">🛍️</div>
+          <div class="card-title">Ритейл: персонализация</div>
+          <div class="card-body" style="line-height:1.6">
+            Интернет-магазин одежды анализировал Instagram подписчиков: стиль по фото, цветовые предпочтения, бренды.
+            <div style="margin-top:8px;padding:6px 10px;background:rgba(16,185,129,.08);border-radius:6px;font-size:.8rem;color:var(--green)">
+              <b>Результат:</b> рост конверсии email-рассылок на 37%, средний чек +23%
+            </div>
+          </div>
+        </div>
+        <div class="card" style="border-color:rgba(139,92,246,.3)">
+          <div style="font-size:1.3rem;margin-bottom:8px">👔</div>
+          <div class="card-title">HR: подбор IT-кадров</div>
+          <div class="card-body" style="line-height:1.6">
+            Анализ LinkedIn + GitHub: реальные навыки по коммитам, статьи, доклады, репутация в сообществах.
+            <div style="margin-top:8px;padding:6px 10px;background:rgba(139,92,246,.08);border-radius:6px;font-size:.8rem;color:var(--purple)">
+              <b>Результат:</b> из 50 кандидатов 15 прошли собеседование, 5 приняты
+            </div>
+          </div>
+        </div>
+        <div class="card" style="border-color:rgba(245,158,11,.3)">
+          <div style="font-size:1.3rem;margin-bottom:8px">💳</div>
+          <div class="card-title">Финтех: кредитный скоринг</div>
+          <div class="card-body" style="line-height:1.6">
+            Профили ВКонтакте заёмщиков: стабильность дружбы, активность, интересы → оценка рискового поведения.
+            <div style="margin-top:8px;padding:6px 10px;background:rgba(245,158,11,.08);border-radius:6px;font-size:.8rem;color:var(--amber)">
+              <b>Результат:</b> снижение дефолтов по микрозаймам на 18%
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="text-align:right;margin-top:24px">
+      <button class="btn btn-outline" style="margin-right:10px" onclick="switchTab(4)">← Назад</button>
+      <button class="btn btn-primary" onclick="switchTab(6)">Индустрия 🏢 →</button>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════ -->
+  <!-- TAB 6: ИНДУСТРИЯ & МЕТАДАННЫЕ -->
+  <!-- ══════════════════════════════════════════════════ -->
+  <div class="tab-panel" id="tab6">
+    <div style="margin-bottom:28px">
+      <div class="section-label" style="color:var(--amber)">Реальный мир</div>
+      <h2 style="font-size:1.3rem;font-weight:800;margin-bottom:6px">Кто и как собирает данные из соцсетей и приложений</h2>
+      <p style="font-size:.9rem;color:var(--text-m)">Компании, которые парсят метаданные, строят цифровые профили и монетизируют поведение пользователей.</p>
+    </div>
+
+    <!-- Section 1: Companies -->
+    <div style="font-weight:700;margin-bottom:14px;font-size:1.05rem">🏢 Компании — мониторинг и аналитика соцсетей</div>
+    <div class="card-grid" style="margin-bottom:24px">
+      <div class="card" style="border-color:rgba(59,130,246,.3)">
+        <div class="card-title" style="color:var(--primary);margin-bottom:10px">🌍 Мировые платформы</div>
+        <div class="timeline">
+          <div class="tl-item">
+            <div class="tl-title">Brandwatch <span class="mini-badge">Social Listening</span></div>
+            <div class="tl-body">Мониторинг 100 млн+ источников в реальном времени. NLP-анализ тональности, трендов и кризисов для брендов.</div>
+          </div>
+          <div class="tl-item">
+            <div class="tl-title">Sprout Social</div>
+            <div class="tl-body">Управление и аналитика соцсетей: вовлечённость, демография аудитории, конкуренты.</div>
+          </div>
+          <div class="tl-item">
+            <div class="tl-title">Hootsuite Insights</div>
+            <div class="tl-body">Мониторинг упоминаний брендов, анализ sentiment, автоматические дашборды.</div>
+          </div>
+          <div class="tl-item" style="padding-bottom:0">
+            <div class="tl-title">Palantir Technologies</div>
+            <div class="tl-body">Агрегация данных из множества источников (соцсети, IoT, финансы). Используется спецслужбами и корпорациями.</div>
+          </div>
+        </div>
+      </div>
+      <div class="card" style="border-color:rgba(16,185,129,.3)">
+        <div class="card-title" style="color:var(--green);margin-bottom:10px">🇷🇺 Российские аналоги</div>
+        <div class="timeline">
+          <div class="tl-item">
+            <div class="tl-title">YouScan <span class="mini-badge">AI Visual</span></div>
+            <div class="tl-body">Анализ изображений и текстов в соцсетях. Распознаёт логотипы, сцены, эмоции на фото. Клиенты: Samsung, PepsiCo.</div>
+          </div>
+          <div class="tl-item">
+            <div class="tl-title">Brand Analytics</div>
+            <div class="tl-body">Крупнейшая российская платформа мониторинга соцмедиа. 40 000+ источников, анализ на русском языке.</div>
+          </div>
+          <div class="tl-item">
+            <div class="tl-title">Popsters</div>
+            <div class="tl-body">Анализ эффективности контента в VK, Telegram, Instagram. Метрики ER (engagement rate), лучшее время постинга.</div>
+          </div>
+          <div class="tl-item" style="padding-bottom:0">
+            <div class="tl-title">Cerebro Target</div>
+            <div class="tl-body">Парсинг аудиторий ВКонтакте. Находит целевых пользователей по подпискам, активности и пересечениям групп.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 2: Metadata & Data Brokers -->
+    <div style="font-weight:700;margin-bottom:14px;font-size:1.05rem">📱 Метаданные приложений — что собирают и кто покупает</div>
+    <p style="font-size:.88rem;color:var(--text-m);margin-bottom:18px">
+      Каждое мобильное приложение генерирует <b>метаданные</b> — информацию <em>о</em> данных, а не сами данные. Это мощный инструмент профилирования.
+    </p>
+    <div class="grid-2" style="margin-bottom:24px">
+      <div class="card" style="border-color:rgba(139,92,246,.3)">
+        <div class="card-title" style="color:var(--purple);margin-bottom:12px">📊 Что собирают приложения</div>
+        <ul class="pill-list">
+          <li><b>Геолокация</b> — GPS-координаты, Wi-Fi точки, Cell ID</li>
+          <li><b>Время активности</b> — когда, сколько, частота сессий</li>
+          <li><b>Устройство</b> — модель, ОС, размер экрана, батарея</li>
+          <li><b>Контакты</b> — телефонная книга, связи между пользователями</li>
+          <li><b>Рекламный ID</b> — IDFA (iOS) / GAID (Android) для трекинга</li>
+          <li><b>Кликстрим</b> — какие кнопки нажимаются, время на экране</li>
+          <li><b>EXIF фото</b> — геотег, дата, камера, ориентация</li>
+        </ul>
+      </div>
+      <div class="card" style="border-color:rgba(245,158,11,.3)">
+        <div class="card-title" style="color:var(--amber);margin-bottom:12px">🏪 Data Brokers — торговцы данными</div>
+        <div class="timeline">
+          <div class="tl-item">
+            <div class="tl-title">Acxiom (Interpublic)</div>
+            <div class="tl-body">Профили 2.5 млрд+ людей. Объединяет онлайн-поведение, покупки, соцсети в единый «цифровой отпечаток».</div>
+          </div>
+          <div class="tl-item">
+            <div class="tl-title">Oracle Data Cloud</div>
+            <div class="tl-body">Продаёт сегменты аудиторий рекламодателям. 5 млрд+ профилей, 30 000+ атрибутов на пользователя.</div>
+          </div>
+          <div class="tl-item" style="padding-bottom:0">
+            <div class="tl-title">LiveRamp</div>
+            <div class="tl-body">«Identity Graph» — сопоставляет email, cookies, мобильные ID, CRM для единого профиля пользователя.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 3: Mobile Attribution -->
+    <div style="font-weight:700;margin-bottom:14px;font-size:1.05rem">🔗 Mobile Attribution — трекинг установок и поведения</div>
+    <div class="card-grid" style="margin-bottom:24px">
+      <div class="tool-card">
+        <div style="font-size:1.5rem;margin-bottom:8px">📈</div>
+        <div style="font-weight:700;margin-bottom:4px;color:var(--primary)">AppsFlyer</div>
+        <div class="card-body">Лидер рынка мобильной атрибуции. Отслеживает путь пользователя: реклама → установка → покупка. 12 000+ клиентов.</div>
+        <div style="margin-top:8px"><span class="tag tag-blue">Attribution</span><span class="tag tag-blue">ROAS</span></div>
+      </div>
+      <div class="tool-card">
+        <div style="font-size:1.5rem;margin-bottom:8px">⚙️</div>
+        <div style="font-weight:700;margin-bottom:4px;color:var(--cyan)">Adjust</div>
+        <div class="card-body">Мобильная аналитика + защита от фрода. Отслеживает in-app события, LTV, когорты удержания.</div>
+        <div style="margin-top:8px"><span class="tag tag-cyan">Analytics</span><span class="tag tag-cyan">Anti-fraud</span></div>
+      </div>
+      <div class="tool-card">
+        <div style="font-size:1.5rem;margin-bottom:8px">🔬</div>
+        <div style="font-weight:700;margin-bottom:4px;color:var(--amber)">data.ai (App Annie)</div>
+        <div class="card-body">Аналитика рынка приложений: рейтинги, загрузки, доходы конкурентов. Используется инвесторами и издателями.</div>
+        <div style="margin-top:8px"><span class="tag tag-amber">Market Intel</span></div>
+      </div>
+      <div class="tool-card">
+        <div style="font-size:1.5rem;margin-bottom:8px">🗼</div>
+        <div style="font-weight:700;margin-bottom:4px;color:var(--purple)">Sensor Tower</div>
+        <div class="card-body">Оценка доходов и загрузок приложений. Анализ рекламных креативов конкурентов в App Store и Google Play.</div>
+        <div style="margin-top:8px"><span class="tag tag-purple">Competitive</span></div>
+      </div>
+    </div>
+
+    <!-- Section 4: Notorious Cases -->
+    <div style="font-weight:700;margin-bottom:14px;font-size:1.05rem">⚠️ Громкие скандалы и кейсы</div>
+    <div class="grid-2" style="margin-bottom:24px">
+      <div class="card" style="border-color:rgba(239,68,68,.3);background:rgba(239,68,68,.03)">
+        <div style="font-size:1.3rem;margin-bottom:8px">🔴</div>
+        <div class="card-title" style="color:var(--red);margin-bottom:10px">Cambridge Analytica (2018)</div>
+        <div class="card-body" style="line-height:1.7">
+          Собрали данные <b>87 млн</b> профилей Facebook через quiz-приложение. Использовали для политического таргетинга (выборы в США, Brexit).
+          Результат: штраф Facebook <b>$5 млрд</b>, компания ликвидирована, GDPR ужесточён.
+        </div>
+      </div>
+      <div class="card" style="border-color:rgba(239,68,68,.3);background:rgba(239,68,68,.03)">
+        <div style="font-size:1.3rem;margin-bottom:8px">📸</div>
+        <div class="card-title" style="color:var(--red);margin-bottom:10px">Clearview AI</div>
+        <div class="card-body" style="line-height:1.7">
+          Спарсила <b>30 млрд+</b> фотографий из соцсетей (Instagram, Facebook, VK) без согласия. Продаёт facial recognition полиции. Штрафы в ЕС, Австралии, Канаде.
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 5: 360 Customer View -->
+    <div style="font-weight:700;margin-bottom:14px;font-size:1.05rem">🔄 360° Customer View — единый цифровой профиль</div>
+    <div class="card" style="border-color:rgba(6,182,212,.3);margin-bottom:24px">
+      <div class="card-body" style="line-height:1.7;margin-bottom:16px">
+        Крупные компании объединяют данные из разных платформ в <b>единый профиль пользователя</b>.
+        Это называется <span class="highlight">Entity Resolution</span> — сопоставление одного человека в разных сетях.
+      </div>
+      <div class="code-editor">
+        <div class="code-header">
+          <div class="code-dots"><div class="code-dot r"></div><div class="code-dot y"></div><div class="code-dot g"></div></div>
+          <span class="code-lang">360° Customer Profile — Concept</span>
+        </div>
+        <pre style="padding:18px;color:#e6edf3;font-size:.84rem;line-height:1.7;overflow-x:auto"><span style="color:#80cbc4">{</span>
+  <span style="color:#80cbc4">"unified_profile"</span>: <span style="color:#80cbc4">{</span>
+    <span style="color:#80cbc4">"vk"</span>:        <span style="color:#a5d6a7">"музыка, группы, друзья, игры"</span>,
+    <span style="color:#80cbc4">"instagram"</span>: <span style="color:#a5d6a7">"визуальные предпочтения, стиль жизни"</span>,
+    <span style="color:#80cbc4">"linkedin"</span>:  <span style="color:#a5d6a7">"профессия, навыки, образование"</span>,
+    <span style="color:#80cbc4">"twitter"</span>:   <span style="color:#a5d6a7">"мнения, новостные предпочтения"</span>,
+    <span style="color:#80cbc4">"mobile_app"</span>: <span style="color:#a5d6a7">"геолокация, время, устройство"</span>
+  <span style="color:#80cbc4">}</span>,
+  <span style="color:#80cbc4">"matching_by"</span>: [<span style="color:#a5d6a7">"email"</span>, <span style="color:#a5d6a7">"phone"</span>, <span style="color:#a5d6a7">"ad_id"</span>, <span style="color:#a5d6a7">"face_embedding"</span>]
+<span style="color:#80cbc4">}</span></pre>
+      </div>
+      <div style="margin-top:14px;display:grid;grid-template-columns:repeat(3,1fr);gap:10px">
+        <div style="text-align:center;padding:12px;background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.2);border-radius:8px">
+          <div style="font-size:1.4rem;margin-bottom:4px">🔗</div>
+          <div style="font-size:.78rem;font-weight:700;color:var(--primary)">Identity Graph</div>
+          <div style="font-size:.75rem;color:var(--text-d)">Граф сопоставленных профилей</div>
+        </div>
+        <div style="text-align:center;padding:12px;background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.2);border-radius:8px">
+          <div style="font-size:1.4rem;margin-bottom:4px">📊</div>
+          <div style="font-size:.78rem;font-weight:700;color:var(--green)">CDP</div>
+          <div style="font-size:.75rem;color:var(--text-d)">Customer Data Platform</div>
+        </div>
+        <div style="text-align:center;padding:12px;background:rgba(139,92,246,.08);border:1px solid rgba(139,92,246,.2);border-radius:8px">
+          <div style="font-size:1.4rem;margin-bottom:4px">⚡</div>
+          <div style="font-size:.78rem;font-weight:700;color:var(--purple)">Apache Kafka</div>
+          <div style="font-size:.75rem;color:var(--text-d)">Real-time интеграция</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 6: Legal -->
+    <div style="font-weight:700;margin-bottom:14px;font-size:1.05rem">⚖️ Правовое регулирование</div>
+    <div class="card-grid" style="margin-bottom:24px">
+      <div class="card" style="border-color:rgba(59,130,246,.25)">
+        <div style="font-weight:700;color:var(--primary);margin-bottom:8px">🇪🇺 GDPR (Европа)</div>
+        <ul class="pill-list">
+          <li>Право на забвение — удаление всех данных</li>
+          <li>Портабельность — право забрать свои данные</li>
+          <li>Штрафы до <b>4% годового оборота</b></li>
+        </ul>
+      </div>
+      <div class="card" style="border-color:rgba(16,185,129,.25)">
+        <div style="font-weight:700;color:var(--green);margin-bottom:8px">🇷🇺 ФЗ-152 (Россия)</div>
+        <ul class="pill-list">
+          <li>Хранение данных россиян на территории РФ</li>
+          <li>Согласие субъекта на обработку ПД</li>
+          <li>Роскомнадзор — контроль и блокировки</li>
+        </ul>
+      </div>
+      <div class="card" style="border-color:rgba(245,158,11,.25)">
+        <div style="font-weight:700;color:var(--amber);margin-bottom:8px">🇺🇸 CCPA (Калифорния)</div>
+        <ul class="pill-list">
+          <li>Право знать, какие данные собраны</li>
+          <li>Право запретить продажу своих данных</li>
+          <li>Штрафы до <b>$7500</b> за каждое нарушение</li>
+        </ul>
+      </div>
+    </div>
+
+    <div style="text-align:right;margin-top:24px">
+      <button class="btn btn-outline" style="margin-right:10px" onclick="switchTab(5)">← Кейсы</button>
+      <button class="btn btn-primary" onclick="switchTab(7)">Практика 💻 →</button>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════ -->
+  <!-- TAB 7: ПРАКТИКА API -->
+  <!-- ══════════════════════════════════════════════════ -->
+  <div class="tab-panel" id="tab7">
+    <div style="margin-bottom:24px">
+      <div class="section-label" style="color:var(--green)">API Практикум</div>
+      <h2 style="font-size:1.3rem;font-weight:800;margin-bottom:6px">VK API: Social Graph</h2>
+      <p style="font-size:.9rem;color:var(--text-m)">Три задания на работу с VK API. Введи правильный метод → получи симулированный ответ сервера.</p>
+    </div>
+
+    <!-- Progress tracker -->
+    <div class="task-track anim d1" id="taskTrack">
+      <div class="task-chip" id="chip0"><div class="dot"></div>Задание 1</div>
+      <div class="task-chip" id="chip1"><div class="dot"></div>Задание 2</div>
+      <div class="task-chip" id="chip2"><div class="dot"></div>Задание 3</div>
+    </div>
+
+    <!-- Task navigation -->
+    <div class="task-nav">
+      <button class="task-nav-btn active" id="tnb0" onclick="goTask(0)">📋 Задание 1<br><small>Пользователь</small></button>
+      <button class="task-nav-btn" id="tnb1" onclick="goTask(1)">👥 Задание 2<br><small>Друзья</small></button>
+      <button class="task-nav-btn" id="tnb2" onclick="goTask(2)">🏘️ Задание 3<br><small>Сообщества</small></button>
+    </div>
+
+    <!-- TASK 1: users.get -->
+    <div class="task-panel active" id="task0">
+      <div class="card" style="margin-bottom:18px;border-color:rgba(6,182,212,.3)">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px">
+          <div>
+            <div style="font-size:.75rem;color:var(--cyan);font-weight:700;text-transform:uppercase;letter-spacing:.08em">Задание 1 из 3</div>
+            <div style="font-size:1.1rem;font-weight:800;margin-top:4px">Получить профиль пользователя</div>
+          </div>
+          <span class="badge badge-blue">users</span>
+        </div>
+        <div style="font-size:.9rem;color:var(--text-m);line-height:1.65">
+          Тебе нужно получить информацию о пользователе ВКонтакте (имя, город, количество подписчиков).
+          <br>Используется метод <code style="background:rgba(255,255,255,.07);padding:2px 6px;border-radius:4px;font-family:monospace">users.get</code>.
+          Это базовый запрос для исследования профиля.
+        </div>
+      </div>
+      <div class="code-editor" style="margin-bottom:16px">
+        <div class="code-header">
+          <div class="code-dots"><div class="code-dot r"></div><div class="code-dot y"></div><div class="code-dot g"></div></div>
+          <span class="code-lang">vk_task1.py · Python 3</span>
+        </div>
+        <div class="code-template">
+<span class="c-kw">import</span> <span class="c-var">requests</span>
+
+<span class="c-comment"># Параметры VK API</span>
+<span class="c-var">API_URL</span>     = <span class="c-str">"https://api.vk.com/method/"</span>
+<span class="c-var">ACCESS_TOKEN</span> = <span class="c-str">"demo_access_token_abc123"</span>
+<span class="c-var">VERSION</span>     = <span class="c-str">"5.131"</span>
+
+<span class="c-comment"># ❓ Какой метод API получает данные пользователя?</span>
+<span class="c-var">method</span> = <span class="method-fill">"_________"</span>   <span class="c-comment"># ← введи правильный метод ниже</span>
+
+<span class="c-var">response</span> = <span class="c-fn">requests.get</span>(
+    <span class="c-var">API_URL</span> + <span class="c-var">method</span>,
+    <span class="c-fn">params</span>={
+        <span class="c-str">"user_ids"</span>:      <span class="c-str">"1"</span>,
+        <span class="c-str">"access_token"</span>: <span class="c-var">ACCESS_TOKEN</span>,
+        <span class="c-str">"v"</span>:             <span class="c-var">VERSION</span>,
+        <span class="c-str">"fields"</span>:        <span class="c-str">"followers_count,city,photo_200"</span>
+    }
+)
+
+<span class="c-fn">print</span>(<span class="c-var">response</span>.<span class="c-fn">json</span>())
+        </div>
+      </div>
+      <div class="card" style="border-color:rgba(245,158,11,.25)">
+        <div style="font-size:.85rem;color:var(--text-m);margin-bottom:10px">
+          💡 <b>Введи название метода</b> для поля <code style="font-family:monospace;background:rgba(255,255,255,.07);padding:2px 6px;border-radius:4px">method</code>:
+        </div>
+        <div style="display:flex;gap:10px;align-items:center">
+          <input class="try-input" id="inp0" type="text" placeholder='Например: users.get' maxlength="40"
+            onkeydown="if(event.key==='Enter') runTask(0)" autocomplete="off" spellcheck="false">
+          <button class="run-btn" onclick="runTask(0)" id="runBtn0">▶ Запуск</button>
+        </div>
+        <div id="hint0" class="hint-box">
+          🔑 <b>Подсказка:</b> методы VK API группируются по сущностям.
+          Для работы с <b>пользователями</b> начало всегда <code style="font-family:monospace">users.</code>
+          Чтобы <b>получить</b> данные — используй метод <code style="font-family:monospace">users.get</code>
+        </div>
+        <button class="hint-toggle" id="htbtn0" onclick="toggleHint(0)">▲ Скрыть подсказку</button>
+      </div>
+      <div style="margin-top:16px">
+        <div class="terminal">
+          <div class="terminal-header">
+            <div class="code-dots"><div class="code-dot r"></div><div class="code-dot y"></div><div class="code-dot g"></div></div>
+            <div class="terminal-title">Terminal — Python Output</div>
+          </div>
+          <div class="terminal-body" id="termBody0">
+            <span class="t-prompt">$ </span><span class="t-cmd">python3 vk_task1.py</span><br>
+            <span class="t-dim" style="color:#444">Ожидание запуска...</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TASK 2: friends.get -->
+    <div class="task-panel" id="task1">
+      <div class="card" style="margin-bottom:18px;border-color:rgba(139,92,246,.3)">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px">
+          <div>
+            <div style="font-size:.75rem;color:var(--purple);font-weight:700;text-transform:uppercase;letter-spacing:.08em">Задание 2 из 3</div>
+            <div style="font-size:1.1rem;font-weight:800;margin-top:4px">Анализ списка друзей</div>
+          </div>
+          <span class="badge badge-blue">friends</span>
+        </div>
+        <div style="font-size:.9rem;color:var(--text-m);line-height:1.65">
+          Необходимо получить список друзей пользователя с именами и сортировкой по имени.
+          Этот запрос используется для построения социального графа и анализа связей.
+        </div>
+      </div>
+      <div class="code-editor" style="margin-bottom:16px">
+        <div class="code-header">
+          <div class="code-dots"><div class="code-dot r"></div><div class="code-dot y"></div><div class="code-dot g"></div></div>
+          <span class="code-lang">vk_task2.py · Python 3</span>
+        </div>
+        <div class="code-template">
+<span class="c-kw">import</span> <span class="c-var">requests</span>, <span class="c-var">json</span>
+
+<span class="c-var">API_URL</span>      = <span class="c-str">"https://api.vk.com/method/"</span>
+<span class="c-var">ACCESS_TOKEN</span> = <span class="c-str">"demo_access_token_abc123"</span>
+
+<span class="c-comment"># ❓ Метод для получения СПИСКА ДРУЗЕЙ пользователя?</span>
+<span class="c-var">method</span> = <span class="method-fill">"_________"</span>   <span class="c-comment"># ← введи ниже</span>
+
+<span class="c-var">params</span> = {
+    <span class="c-str">"user_id"</span>:      <span class="c-num">1</span>,
+    <span class="c-str">"access_token"</span>: <span class="c-var">ACCESS_TOKEN</span>,
+    <span class="c-str">"v"</span>:            <span class="c-str">"5.131"</span>,
+    <span class="c-str">"order"</span>:        <span class="c-str">"name"</span>,
+    <span class="c-str">"fields"</span>:       <span class="c-str">"city,bdate,online"</span>
+}
+
+<span class="c-var">data</span> = <span class="c-fn">requests.get</span>(<span class="c-var">API_URL</span> + <span class="c-var">method</span>, <span class="c-fn">params</span>=<span class="c-var">params</span>).<span class="c-fn">json</span>()
+
+<span class="c-comment"># Количество друзей</span>
+<span class="c-fn">print</span>(<span class="c-str">f"Всего друзей: {<span class="c-var">data</span>[<span class="c-str">'response'</span>][<span class="c-str">'count'</span>]}"</span>)
+<span class="c-fn">print</span>(<span class="c-fn">json.dumps</span>(<span class="c-var">data</span>, <span class="c-fn">ensure_ascii</span>=<span class="c-kw">False</span>, <span class="c-fn">indent</span>=<span class="c-num">2</span>))
+        </div>
+      </div>
+      <div class="card" style="border-color:rgba(245,158,11,.25)">
+        <div style="font-size:.85rem;color:var(--text-m);margin-bottom:10px">💡 <b>Введи название метода</b>:</div>
+        <div style="display:flex;gap:10px;align-items:center">
+          <input class="try-input" id="inp1" type="text" placeholder='Метод работы с друзьями...' maxlength="40"
+            onkeydown="if(event.key==='Enter') runTask(1)" autocomplete="off" spellcheck="false">
+          <button class="run-btn" onclick="runTask(1)" id="runBtn1">▶ Запуск</button>
+        </div>
+        <div id="hint1" class="hint-box">
+          🔑 <b>Подсказка:</b> всё что связано с <b>друзьями</b> — методы начинаются с <code style="font-family:monospace">friends.</code>
+          Чтобы <b>получить список</b> — суффикс <code style="font-family:monospace">.get</code>
+          → итого: <code style="font-family:monospace">friends.get</code>
+        </div>
+        <button class="hint-toggle" id="htbtn1" onclick="toggleHint(1)">▲ Скрыть подсказку</button>
+      </div>
+      <div style="margin-top:16px">
+        <div class="terminal">
+          <div class="terminal-header">
+            <div class="code-dots"><div class="code-dot r"></div><div class="code-dot y"></div><div class="code-dot g"></div></div>
+            <div class="terminal-title">Terminal — Python Output</div>
+          </div>
+          <div class="terminal-body" id="termBody1">
+            <span class="t-prompt">$ </span><span class="t-cmd">python3 vk_task2.py</span><br>
+            <span style="color:#444">Ожидание запуска...</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TASK 3: groups.get -->
+    <div class="task-panel" id="task2">
+      <div class="card" style="margin-bottom:18px;border-color:rgba(245,158,11,.3)">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px">
+          <div>
+            <div style="font-size:.75rem;color:var(--amber);font-weight:700;text-transform:uppercase;letter-spacing:.08em">Задание 3 из 3</div>
+            <div style="font-size:1.1rem;font-weight:800;margin-top:4px">Анализ сообществ пользователя</div>
+          </div>
+          <span class="badge badge-amber">groups</span>
+        </div>
+        <div style="font-size:.9rem;color:var(--text-m);line-height:1.65">
+          Получить список сообществ (групп), в которых состоит пользователь.
+          Это ключевой запрос для анализа интересов и сегментации аудитории.
+        </div>
+      </div>
+      <div class="code-editor" style="margin-bottom:16px">
+        <div class="code-header">
+          <div class="code-dots"><div class="code-dot r"></div><div class="code-dot y"></div><div class="code-dot g"></div></div>
+          <span class="code-lang">vk_task3.py · Python 3</span>
+        </div>
+        <div class="code-template">
+<span class="c-kw">import</span> <span class="c-var">requests</span>, <span class="c-var">json</span>
+
+<span class="c-var">API_URL</span>      = <span class="c-str">"https://api.vk.com/method/"</span>
+<span class="c-var">ACCESS_TOKEN</span> = <span class="c-str">"demo_access_token_abc123"</span>
+
+<span class="c-comment"># ❓ Метод для получения СПИСКА СООБЩЕСТВ пользователя?</span>
+<span class="c-var">method</span> = <span class="method-fill">"_________"</span>   <span class="c-comment"># ← введи ниже</span>
+
+<span class="c-var">params</span> = {
+    <span class="c-str">"user_id"</span>:       <span class="c-num">1</span>,
+    <span class="c-str">"access_token"</span>:  <span class="c-var">ACCESS_TOKEN</span>,
+    <span class="c-str">"v"</span>:             <span class="c-str">"5.131"</span>,
+    <span class="c-str">"filter"</span>:        <span class="c-str">"groups"</span>,
+    <span class="c-str">"extended"</span>:      <span class="c-num">1</span>,
+    <span class="c-str">"fields"</span>:        <span class="c-str">"members_count,activity"</span>
+}
+
+<span class="c-var">data</span> = <span class="c-fn">requests.get</span>(<span class="c-var">API_URL</span> + <span class="c-var">method</span>, <span class="c-fn">params</span>=<span class="c-var">params</span>).<span class="c-fn">json</span>()
+<span class="c-fn">print</span>(<span class="c-fn">json.dumps</span>(<span class="c-var">data</span>, <span class="c-fn">ensure_ascii</span>=<span class="c-kw">False</span>, <span class="c-fn">indent</span>=<span class="c-num">2</span>))
+        </div>
+      </div>
+      <div class="card" style="border-color:rgba(245,158,11,.25)">
+        <div style="font-size:.85rem;color:var(--text-m);margin-bottom:10px">💡 <b>Введи название метода</b>:</div>
+        <div style="display:flex;gap:10px;align-items:center">
+          <input class="try-input" id="inp2" type="text" placeholder='Метод работы с группами...' maxlength="40"
+            onkeydown="if(event.key==='Enter') runTask(2)" autocomplete="off" spellcheck="false">
+          <button class="run-btn" onclick="runTask(2)" id="runBtn2">▶ Запуск</button>
+        </div>
+        <div id="hint2" class="hint-box">
+          🔑 <b>Подсказка:</b> работа с <b>группами/сообществами</b> — методы начинаются с <code style="font-family:monospace">groups.</code>
+          Для получения списка — суффикс <code style="font-family:monospace">.get</code>
+          → итого: <code style="font-family:monospace">groups.get</code>
+        </div>
+        <button class="hint-toggle" id="htbtn2" onclick="toggleHint(2)">▲ Скрыть подсказку</button>
+      </div>
+      <div style="margin-top:16px">
+        <div class="terminal">
+          <div class="terminal-header">
+            <div class="code-dots"><div class="code-dot r"></div><div class="code-dot y"></div><div class="code-dot g"></div></div>
+            <div class="terminal-title">Terminal — Python Output</div>
+          </div>
+          <div class="terminal-body" id="termBody2">
+            <span class="t-prompt">$ </span><span class="t-cmd">python3 vk_task3.py</span><br>
+            <span style="color:#444">Ожидание запуска...</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quiz gate -->
+    <div style="margin-top:32px;text-align:center;padding:28px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-lg)" id="quizGate">
+      <div style="font-size:1.1rem;font-weight:700;margin-bottom:6px" id="gateTitle">🔒 Тест заблокирован</div>
+      <div style="font-size:.88rem;color:var(--text-m);margin-bottom:18px" id="gateText">Выполни все 3 задания, чтобы разблокировать тест</div>
+      <div style="display:flex;gap:8px;justify-content:center;margin-bottom:18px" id="gateChips">
+        <span id="gc0" style="padding:4px 12px;border-radius:100px;border:1px solid var(--border);font-size:.8rem;color:var(--text-d)">Задание 1</span>
+        <span id="gc1" style="padding:4px 12px;border-radius:100px;border:1px solid var(--border);font-size:.8rem;color:var(--text-d)">Задание 2</span>
+        <span id="gc2" style="padding:4px 12px;border-radius:100px;border:1px solid var(--border);font-size:.8rem;color:var(--text-d)">Задание 3</span>
+      </div>
+    </div>
+
+    <!-- INLINE QUIZ -->
+    <div id="inlineQuiz" style="display:none;margin-top:28px">
+      <div id="iqIntro" style="background:var(--bg-card);border:1px solid rgba(59,130,246,.3);border-radius:var(--r-lg);padding:36px 28px;text-align:center">
+        <div style="font-size:3rem;margin-bottom:14px;animation:float-icon 3s ease-in-out infinite">🧠</div>
+        <div class="section-label" style="justify-content:center;display:flex">Закрепление</div>
+        <h2 style="font-size:1.3rem;font-weight:900;margin:10px 0">11 вопросов по теме лабы</h2>
+        <p style="color:var(--text-m);font-size:.9rem;margin-bottom:28px;line-height:1.7">
+          30 секунд на каждый вопрос. После ответа — объяснение.<br>
+          Проверь, насколько ты усвоил материал.
+        </p>
+        <button class="btn btn-primary btn-lg" onclick="iqStart()">Начать тест →</button>
+      </div>
+
+      <div id="iqMain" style="display:none">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px">
+          <span style="font-size:.85rem;color:var(--text-m)" id="iqCounter">Вопрос 1 из 8</span>
+          <span class="quiz-timer" id="iqTimer">⏱ 30</span>
+        </div>
+        <div style="background:var(--bg-card3);height:4px;border-radius:2px;margin-bottom:22px">
+          <div id="iqProgFill" style="background:var(--primary);height:100%;border-radius:2px;width:0;transition:width .35s ease"></div>
+        </div>
+        <div class="quiz-card" id="iqCard">
+          <div class="quiz-q" id="iqText"></div>
+          <div class="quiz-opts" id="iqOptions"></div>
+          <div class="quiz-explain" id="iqExplain" style="display:none"></div>
+          <div style="text-align:right;margin-top:18px">
+            <button class="btn btn-primary" id="iqNextBtn" style="display:none" onclick="iqNext()">Следующий →</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="iqEnd" style="display:none;text-align:center;padding:40px 20px">
+        <div style="font-size:3.5rem;margin-bottom:14px" id="iqEndIcon">🏆</div>
+        <div style="font-size:1.4rem;font-weight:900;margin-bottom:6px" id="iqEndTitle">Результат</div>
+        <div style="color:var(--text-m);font-size:.95rem;margin-bottom:22px" id="iqEndSub"></div>
+        <div style="display:flex;gap:24px;justify-content:center;margin-bottom:28px">
+          <div><div style="font-size:2rem;font-weight:900" id="iqEndScore">0/8</div><div style="font-size:.78rem;color:var(--text-d)">Верно</div></div>
+          <div><div style="font-size:2rem;font-weight:900" id="iqEndPct">0%</div><div style="font-size:.78rem;color:var(--text-d)">Балл</div></div>
+        </div>
+        <a href="results.html" class="btn btn-primary btn-lg">📊 Подробный разбор →</a>
+        <br><br>
+        <button class="btn btn-outline" onclick="iqRestart()">🔄 Пройти заново</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ══════════════════════════════════════════════════ -->
+  <!-- TAB 8: БОНУС -->
+  <!-- ══════════════════════════════════════════════════ -->
+  <div class="tab-panel" id="tab8">
+    <div style="margin-bottom:28px">
+      <div class="section-label" style="color:var(--purple)">Бонусный раздел</div>
+      <h2 style="font-size:1.3rem;font-weight:800;margin-bottom:6px">Открытые API + Web Scraping</h2>
+      <p style="font-size:.9rem;color:var(--text-m)">API без токенов и основы парсинга — дополнительные навыки.</p>
+    </div>
+
+    <!-- Open APIs -->
+    <div style="font-weight:700;margin-bottom:14px;font-size:1.05rem">🌍 Открытые API без регистрации</div>
+    <p style="font-size:.88rem;color:var(--text-m);margin-bottom:18px">Нажми <b>«▶ Запрос»</b> — данные придут в реальном времени (live fetch).</p>
+    <div class="card-grid" style="margin-bottom:32px">
+      <div class="api-card">
+        <div style="font-weight:700">📝 JSONPlaceholder</div>
+        <div style="font-size:.82rem;color:var(--text-m)">Фейковый REST API для тестирования.</div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:.82rem;color:var(--text-m);white-space:nowrap">Пользователь #</span>
+          <input type="number" class="api-input" id="inp-jp" min="1" max="10" value="1"
+            style="width:68px;flex-shrink:0"
+            oninput="updateJpUrl()" onkeydown="if(event.key==='Enter')callUser()">
+          <span class="api-helper">(1 – 10)</span>
+        </div>
+        <div class="api-url" id="url-jp">https://jsonplaceholder.typicode.com/users/1</div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <button class="api-run" id="btn-jp" onclick="callUser()">▶ Запрос</button>
+        </div>
+        <pre class="api-result" id="res-jp"></pre>
+      </div>
+      <div class="api-card">
+        <div style="font-weight:700">🌍 REST Countries</div>
+        <div style="font-size:.82rem;color:var(--text-m)">Данные о странах: население, языки, валюта.</div>
+        <input class="api-input" id="inp-rc" list="countries-list"
+          placeholder="Введи страну на английском (напр. germany)" value="russia"
+          oninput="updateCountryUrl()" onkeydown="if(event.key==='Enter')callCountry()">
+        <datalist id="countries-list">
+          <option value="russia"><option value="germany"><option value="france">
+          <option value="usa"><option value="china"><option value="japan">
+          <option value="brazil"><option value="india"><option value="australia">
+          <option value="canada"><option value="italy"><option value="spain">
+          <option value="turkey"><option value="argentina"><option value="mexico">
+          <option value="kazakhstan"><option value="ukraine"><option value="poland">
+          <option value="netherlands"><option value="sweden"><option value="norway">
+        </datalist>
+        <div class="api-url" id="url-rc">https://restcountries.com/v3.1/name/russia?fields=name,capital,population,languages,currencies</div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <button class="api-run" id="btn-rc" onclick="callCountry()">▶ Запрос</button>
+        </div>
+        <pre class="api-result" id="res-rc"></pre>
+      </div>
+      <div class="api-card">
+        <div style="font-weight:700">⚡ PokéAPI</div>
+        <div style="font-size:.82rem;color:var(--text-m)">800+ покемонов: статы, типы, способности.</div>
+        <input class="api-input" id="inp-pk" list="pokemon-list"
+          placeholder="Введи имя или ID покемона" value="pikachu"
+          oninput="updatePokemonUrl()" onkeydown="if(event.key==='Enter')callPokemon()">
+        <datalist id="pokemon-list">
+          <option value="pikachu"><option value="charizard"><option value="bulbasaur">
+          <option value="squirtle"><option value="mewtwo"><option value="gengar">
+          <option value="snorlax"><option value="eevee"><option value="lucario">
+          <option value="garchomp"><option value="arcanine"><option value="dragonite">
+        </datalist>
+        <div class="api-url" id="url-pk">https://pokeapi.co/api/v2/pokemon/pikachu</div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <button class="api-run" id="btn-pk" onclick="callPokemon()">▶ Запрос</button>
+        </div>
+        <pre class="api-result" id="res-pk"></pre>
+      </div>
+      <div class="api-card">
+        <div style="font-weight:700">🌤️ Open-Meteo</div>
+        <div style="font-size:.82rem;color:var(--text-m)">Прогноз погоды — бесплатный, без ключа.</div>
+        <select class="api-select" id="sel-wt" onchange="updateWeatherUrl()">
+          <option value="55.75,37.62">🇷🇺 Москва</option>
+          <option value="59.93,30.32">🇷🇺 Санкт-Петербург</option>
+          <option value="55.0,73.4">🇷🇺 Омск</option>
+          <option value="51.51,-0.13">🇬🇧 Лондон</option>
+          <option value="48.85,2.35">🇫🇷 Париж</option>
+          <option value="52.52,13.4">🇩🇪 Берлин</option>
+          <option value="40.71,-74.01">🇺🇸 Нью-Йорк</option>
+          <option value="34.05,-118.24">🇺🇸 Лос-Анджелес</option>
+          <option value="35.68,139.69">🇯🇵 Токио</option>
+          <option value="39.91,116.39">🇨🇳 Пекин</option>
+          <option value="43.24,76.92">🇰🇿 Алматы</option>
+          <option value="41.29,69.24">🇺🇿 Ташкент</option>
+          <option value="51.18,71.45">🇰🇿 Астана</option>
+          <option value="-33.87,151.21">🇦🇺 Сидней</option>
+          <option value="-23.55,-46.63">🇧🇷 Сан-Паулу</option>
+          <option value="28.61,77.21">🇮🇳 Нью-Дели</option>
+          <option value="25.2,55.27">🇦🇪 Дубай</option>
+        </select>
+        <div class="api-url" id="url-wt">https://api.open-meteo.com/v1/forecast?latitude=55.75&amp;longitude=37.62&amp;current_weather=true</div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <button class="api-run" id="btn-wt" onclick="callWeather()">▶ Запрос</button>
+        </div>
+        <pre class="api-result" id="res-wt"></pre>
+      </div>
+      <div class="api-card">
+        <div style="font-weight:700">🐱 Cat Facts</div>
+        <div style="font-size:.82rem;color:var(--text-m)">Случайный факт о кошках (JSON).</div>
+        <div class="api-url">https://catfact.ninja/fact</div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <button class="api-run" id="btn-cf" onclick="callApi('cf','https://catfact.ninja/fact')">▶ Запрос</button>
+        </div>
+        <pre class="api-result" id="res-cf"></pre>
+      </div>
+      <div class="api-card">
+        <div style="font-weight:700">📰 Hacker News</div>
+        <div style="font-size:.82rem;color:var(--text-m)">Топ-статья IT-новостей в реальном времени.</div>
+        <div class="api-url">https://hacker-news.firebaseio.com/v0/item/1.json</div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <button class="api-run" id="btn-hn" onclick="callApi('hn','https://hacker-news.firebaseio.com/v0/item/1.json')">▶ Запрос</button>
+        </div>
+        <pre class="api-result" id="res-hn"></pre>
+      </div>
+    </div>
+
+    <div class="section-divider"></div>
+
+    <!-- Web Scraping -->
+    <div style="font-weight:700;margin-bottom:14px;font-size:1.05rem">🕷️ Основы Web Scraping</div>
+    <p style="font-size:.88rem;color:var(--text-m);margin-bottom:20px">Когда API нет — данные можно извлечь из HTML-страниц. Вот базовый пайплайн:</p>
+
+    <div class="card" style="margin-bottom:20px">
+      <div class="parse-step">
+        <div class="parse-num">1</div>
+        <div>
+          <div style="font-weight:700;margin-bottom:4px">Отправить HTTP-запрос</div>
+          <div style="font-size:.85rem;color:var(--text-m)"><code>requests.get(url)</code> → получить HTML-код страницы</div>
+        </div>
+      </div>
+      <div class="parse-step">
+        <div class="parse-num">2</div>
+        <div>
+          <div style="font-weight:700;margin-bottom:4px">Парсинг HTML</div>
+          <div style="font-size:.85rem;color:var(--text-m)"><code>BeautifulSoup(html, 'html.parser')</code> → дерево DOM</div>
+        </div>
+      </div>
+      <div class="parse-step">
+        <div class="parse-num">3</div>
+        <div>
+          <div style="font-weight:700;margin-bottom:4px">Поиск элементов</div>
+          <div style="font-size:.85rem;color:var(--text-m)"><code>soup.find_all('div', class_='post')</code> → список элементов</div>
+        </div>
+      </div>
+      <div class="parse-step">
+        <div class="parse-num">4</div>
+        <div>
+          <div style="font-weight:700;margin-bottom:4px">Извлечение данных</div>
+          <div style="font-size:.85rem;color:var(--text-m)"><code>el.text</code>, <code>el['href']</code> → текст и атрибуты</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="code-editor" style="margin-bottom:20px">
+      <div class="code-header">
+        <div class="code-dots"><div class="code-dot r"></div><div class="code-dot y"></div><div class="code-dot g"></div></div>
+        <span class="code-lang">scraper.py · BeautifulSoup</span>
+      </div>
+      <pre style="padding:18px;color:#e6edf3;font-size:.84rem;line-height:1.7;overflow-x:auto"><span style="color:#ff7b72">import</span> <span style="color:#79c0ff">requests</span>
+<span style="color:#ff7b72">from</span> <span style="color:#79c0ff">bs4</span> <span style="color:#ff7b72">import</span> <span style="color:#d2a8ff">BeautifulSoup</span>
+
+<span style="color:#8b949e"># 1. Получаем HTML</span>
+<span style="color:#79c0ff">url</span> = <span style="color:#a5d6a7">"https://example.com/news"</span>
+<span style="color:#79c0ff">resp</span> = <span style="color:#79c0ff">requests</span>.<span style="color:#d2a8ff">get</span>(<span style="color:#79c0ff">url</span>)
+
+<span style="color:#8b949e"># 2. Парсим</span>
+<span style="color:#79c0ff">soup</span> = <span style="color:#d2a8ff">BeautifulSoup</span>(<span style="color:#79c0ff">resp</span>.text, <span style="color:#a5d6a7">"html.parser"</span>)
+
+<span style="color:#8b949e"># 3. Ищем все заголовки новостей</span>
+<span style="color:#79c0ff">titles</span> = <span style="color:#79c0ff">soup</span>.<span style="color:#d2a8ff">find_all</span>(<span style="color:#a5d6a7">"h2"</span>, class_=<span style="color:#a5d6a7">"news-title"</span>)
+
+<span style="color:#8b949e"># 4. Извлекаем текст</span>
+<span style="color:#ff7b72">for</span> <span style="color:#79c0ff">t</span> <span style="color:#ff7b72">in</span> <span style="color:#79c0ff">titles</span>:
+    <span style="color:#d2a8ff">print</span>(<span style="color:#79c0ff">t</span>.text.strip())</pre>
+    </div>
+
+    <!-- Cheat sheet -->
+    <div style="font-weight:700;margin-bottom:12px;font-size:.95rem">📋 Шпаргалка методов BeautifulSoup</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;margin-bottom:28px">
+      <div class="tool-card" style="padding:12px">
+        <code style="color:var(--cyan);font-size:.8rem">soup.find('tag')</code>
+        <div style="font-size:.78rem;color:var(--text-d);margin-top:4px">Первый элемент</div>
+      </div>
+      <div class="tool-card" style="padding:12px">
+        <code style="color:var(--cyan);font-size:.8rem">soup.find_all('tag')</code>
+        <div style="font-size:.78rem;color:var(--text-d);margin-top:4px">Все элементы</div>
+      </div>
+      <div class="tool-card" style="padding:12px">
+        <code style="color:var(--cyan);font-size:.8rem">soup.select('.class')</code>
+        <div style="font-size:.78rem;color:var(--text-d);margin-top:4px">CSS-селектор</div>
+      </div>
+      <div class="tool-card" style="padding:12px">
+        <code style="color:var(--cyan);font-size:.8rem">el.text</code>
+        <div style="font-size:.78rem;color:var(--text-d);margin-top:4px">Текст элемента</div>
+      </div>
+      <div class="tool-card" style="padding:12px">
+        <code style="color:var(--cyan);font-size:.8rem">el['href']</code>
+        <div style="font-size:.78rem;color:var(--text-d);margin-top:4px">Атрибут</div>
+      </div>
+      <div class="tool-card" style="padding:12px">
+        <code style="color:var(--cyan);font-size:.8rem">el.get_text(strip=True)</code>
+        <div style="font-size:.78rem;color:var(--text-d);margin-top:4px">Чистый текст</div>
+      </div>
+    </div>
+
+    <div class="section-divider"></div>
+
+    <!-- ═══ REAL-WORLD SCRAPING SECTION ═══ -->
+    <div style="font-weight:700;margin-bottom:6px;font-size:1.05rem">🏗️ Скрейпинг реальных сайтов без API</div>
+    <p style="font-size:.88rem;color:var(--text-m);margin-bottom:20px">
+      Большинство популярных сервисов — <b>риелторские сайты, доски объявлений о работе, маркетплейсы</b> —
+      не предоставляют публичный API.
+      Но данные на них огромны и ценны для исследований, аналитики и ML-моделей.
+    </p>
+
+    <!-- Why not just download everything -->
+    <div class="card" style="margin-bottom:20px;border-color:rgba(245,158,11,.3);background:rgba(245,158,11,.04)">
+      <div style="font-weight:700;margin-bottom:14px;font-size:.97rem;color:var(--amber)">⚠️ Почему нельзя просто скачать всё сразу?</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px">
+        <div style="padding:12px;background:rgba(255,255,255,.04);border-radius:10px;border:1px solid var(--border)">
+          <div style="font-weight:700;margin-bottom:6px;font-size:.88rem">🚦 Rate Limiting</div>
+          <div style="font-size:.82rem;color:var(--text-m)">Сервер считает запросы с одного IP. При превышении порога (~30–100 req/min) — блокировка 429 Too Many Requests или soft-ban на часы/дни.</div>
+        </div>
+        <div style="padding:12px;background:rgba(255,255,255,.04);border-radius:10px;border:1px solid var(--border)">
+          <div style="font-weight:700;margin-bottom:6px;font-size:.88rem">🤖 Anti-bot системы</div>
+          <div style="font-size:.82rem;color:var(--text-m)">Cloudflare, DataDome, PerimeterX анализируют поведение: скорость, порядок запросов, TLS-fingerprint, mouse-movement. Боты распознаются даже с уникальными IP.</div>
+        </div>
+        <div style="padding:12px;background:rgba(255,255,255,.04);border-radius:10px;border:1px solid var(--border)">
+          <div style="font-weight:700;margin-bottom:6px;font-size:.88rem">🍪 Сессии и куки</div>
+          <div style="font-size:.82rem;color:var(--text-m)">Многие сайты требуют авторизации или валидной сессии. Без cookies часть данных недоступна или приходит пустая страница.</div>
+        </div>
+        <div style="padding:12px;background:rgba(255,255,255,.04);border-radius:10px;border:1px solid var(--border)">
+          <div style="font-weight:700;margin-bottom:6px;font-size:.88rem">⚡ JS-рендеринг</div>
+          <div style="font-size:.82rem;color:var(--text-m)">Контент загружается через React/Vue/Angular: <code>requests.get()</code> вернёт пустой HTML — данных нет. Нужен браузер, который выполнит JS.</div>
+        </div>
+        <div style="padding:12px;background:rgba(255,255,255,.04);border-radius:10px;border:1px solid var(--border)">
+          <div style="font-weight:700;margin-bottom:6px;font-size:.88rem">🕵️ Honeypot-ловушки</div>
+          <div style="font-size:.82rem;color:var(--text-m)">Скрытые ссылки, невидимые обычному пользователю (CSS: display:none). Если бот переходит — IP моментально блокируется.</div>
+        </div>
+        <div style="padding:12px;background:rgba(255,255,255,.04);border-radius:10px;border:1px solid var(--border)">
+          <div style="font-weight:700;margin-bottom:6px;font-size:.88rem">📋 CAPTCHA</div>
+          <div style="font-size:.82rem;color:var(--text-m)">reCAPTCHA v3 ставит оценку каждому запросу по поведению. Нет человеческого поведения — получаешь капчу или редирект на страницу верификации.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Правильная стратегия -->
+    <div style="font-weight:700;margin-bottom:14px;font-size:.97rem">✅ Правильная стратегия «вежливого» парсера</div>
+    <div class="card" style="margin-bottom:24px">
+      <div style="display:grid;gap:10px">
+        <div class="parse-step" style="align-items:center">
+          <div class="parse-num">1</div>
+          <div><b>Задержки между запросами</b> — <code>time.sleep(random.uniform(2, 5))</code>. Случайный интервал имитирует человека лучше, чем фиксированный.</div>
+        </div>
+        <div class="parse-step" style="align-items:center">
+          <div class="parse-num">2</div>
+          <div><b>Ротация User-Agent</b> — использовать список реальных строк браузеров (Chrome, Firefox). Один UA = явный признак бота.</div>
+        </div>
+        <div class="parse-step" style="align-items:center">
+          <div class="parse-num">3</div>
+          <div><b>Уважай robots.txt</b> — <code>urllib.robotparser</code> или просто читай файл <code>/robots.txt</code> перед стартом. Часть страниц явно запрещена.</div>
+        </div>
+        <div class="parse-step" style="align-items:center">
+          <div class="parse-num">4</div>
+          <div><b>Обработка ошибок</b> — при 429/503 не ломиться повторно. Exponential backoff: подождать 10 сек, 20 сек, 40 сек...</div>
+        </div>
+        <div class="parse-step" style="align-items:center">
+          <div class="parse-num">5</div>
+          <div><b>Сохранять прогресс</b> — писать в файл каждые N записей. При вылете не начинать сначала.</div>
+        </div>
+        <div class="parse-step" style="align-items:center">
+          <div class="parse-num">6</div>
+          <div><b>Для JS-сайтов — Playwright/Selenium</b> — запускает реальный браузер (Chromium), выполняет JS, ждёт нужных DOM-элементов.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- JS rendering block -->
+    <div style="font-weight:700;margin-bottom:14px;font-size:.97rem">🔧 Как работать с JS-рендерингом?</div>
+    <p style="font-size:.88rem;color:var(--text-m);margin-bottom:16px">Современные сайты (React, Vue, Angular) не отдают данные в HTML — они загружают их через JS после открытия страницы. Есть два подхода:</p>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px">
+      <div class="card" style="border-color:rgba(6,182,212,.3)">
+        <div style="font-weight:700;margin-bottom:8px;font-size:.9rem;color:var(--cyan)">🔍 Подход 1: Перехватить XHR/Fetch</div>
+        <div style="font-size:.83rem;color:var(--text-m);margin-bottom:10px">Открой DevTools → Network → XHR/Fetch. Сайт сам дёргает свой внутренний API — ты видишь URL и ответ.</div>
+        <div style="font-size:.82rem;line-height:1.7">
+          <div style="margin-bottom:4px">1. F12 → вкладка Network → фильтр <code>Fetch/XHR</code></div>
+          <div style="margin-bottom:4px">2. Обновить страницу → найти запрос с JSON-данными</div>
+          <div style="margin-bottom:4px">3. Скопировать URL + заголовки (<code>Authorization</code>, <code>Cookie</code>)</div>
+          <div>4. Воспроизвести запрос через <code>requests</code> с теми же headers</div>
+        </div>
+      </div>
+      <div class="card" style="border-color:rgba(139,92,246,.3)">
+        <div style="font-weight:700;margin-bottom:8px;font-size:.9rem;color:var(--purple)">🤖 Подход 2: Playwright (headless browser)</div>
+        <div style="font-size:.83rem;color:var(--text-m);margin-bottom:10px">Запускает настоящий Chromium, выполняет весь JS, ждёт нужного селектора — потом читает DOM.</div>
+        <div class="code-editor" style="margin:0">
+          <div class="code-header"><div class="code-dots"><div class="code-dot r"></div><div class="code-dot y"></div><div class="code-dot g"></div></div><span class="code-lang">playwright_example.py</span></div>
+          <pre style="padding:12px;color:#e6edf3;font-size:.78rem;line-height:1.65;overflow-x:auto"><span style="color:#ff7b72">from</span> <span style="color:#79c0ff">playwright.sync_api</span> <span style="color:#ff7b72">import</span> <span style="color:#d2a8ff">sync_playwright</span>
+
+<span style="color:#ff7b72">with</span> <span style="color:#d2a8ff">sync_playwright</span>() <span style="color:#ff7b72">as</span> <span style="color:#79c0ff">p</span>:
+  browser = <span style="color:#79c0ff">p</span>.chromium.<span style="color:#d2a8ff">launch</span>(headless=<span style="color:#ff7b72">True</span>)
+  page = browser.<span style="color:#d2a8ff">new_page</span>()
+  page.<span style="color:#d2a8ff">goto</span>(<span style="color:#a5d6a7">"https://example.com"</span>)
+  <span style="color:#8b949e"># Ждём появления элементов</span>
+  page.<span style="color:#d2a8ff">wait_for_selector</span>(<span style="color:#a5d6a7">".listing-card"</span>)
+  items = page.<span style="color:#d2a8ff">query_selector_all</span>(<span style="color:#a5d6a7">".listing-card"</span>)
+  <span style="color:#ff7b72">for</span> el <span style="color:#ff7b72">in</span> items:
+    <span style="color:#d2a8ff">print</span>(el.<span style="color:#d2a8ff">text_content</span>())
+  browser.<span style="color:#d2a8ff">close</span>()</pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- Практические задания -->
+    <div class="section-divider"></div>
+    <div style="font-weight:700;margin-bottom:6px;font-size:1.05rem">💼 Практические задания — выбери своё</div>
+    <p style="font-size:.88rem;color:var(--text-m);margin-bottom:20px">Три сценария реального парсинга. Каждый — отдельный pet-project. Изучи структуру задания и реализуй парсер.</p>
+
+    <!-- Task selector tabs -->
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px">
+      <button id="ptab0" class="api-run" style="padding:9px 18px;font-size:.85rem;border-color:rgba(16,185,129,.5)"
+        onclick="switchPTask(0)">🏠 Риелторский сайт</button>
+      <button id="ptab1" class="api-run" style="padding:9px 18px;font-size:.85rem;border-color:rgba(59,130,246,.4);color:var(--blue);background:rgba(59,130,246,.08)"
+        onclick="switchPTask(1)">💼 Поиск работы</button>
+      <button id="ptab2" class="api-run" style="padding:9px 18px;font-size:.85rem;border-color:rgba(139,92,246,.4);color:var(--purple);background:rgba(139,92,246,.08)"
+        onclick="switchPTask(2)">🛒 Товарный агрегатор</button>
+    </div>
+
+    <!-- Task 0: Real estate -->
+    <div id="ptask0" class="card" style="margin-bottom:24px">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+        <div style="font-size:2rem">🏠</div>
+        <div>
+          <div style="font-weight:800;font-size:1rem">Задание 1: Парсинг объявлений о недвижимости</div>
+          <div style="font-size:.83rem;color:var(--text-m)">Прототип: ЦИАН, Авито.Недвижимость, Домклик, Zillow, Rightmove</div>
+        </div>
+      </div>
+      <div style="font-size:.85rem;margin-bottom:16px;line-height:1.8;color:var(--text-m)">
+        <b style="color:var(--text)">Цель:</b> собрать базу квартир в аренду/продажу по городу: цена, площадь, этаж, адрес, дата публикации, ссылка.<br>
+        <b style="color:var(--text)">Что мешает:</b> бесконечный скролл (Intersection Observer), JS-рендеринг цен, анти-бот (Cloudflare на Авито),
+        пагинация через параметры URL (<code>?p=2</code> или через API XHR).
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px">
+        <div>
+          <div style="font-weight:700;font-size:.87rem;margin-bottom:8px;color:var(--cyan)">🔍 Что смотреть в DevTools</div>
+          <ul style="font-size:.82rem;color:var(--text-m);line-height:1.9;padding-left:18px;margin:0">
+            <li>Network → XHR → найти <code>/api/offers</code> или <code>/listings</code></li>
+            <li>Смотреть параметры запроса: город, тип, страница</li>
+            <li>Скопировать <code>Cookie</code> и <code>x-csrf-token</code> из заголовков</li>
+            <li>Проверить, меняется ли ответ без авторизации</li>
+          </ul>
+        </div>
+        <div>
+          <div style="font-weight:700;font-size:.87rem;margin-bottom:8px;color:var(--green)">✅ План реализации</div>
+          <ul style="font-size:.82rem;color:var(--text-m);line-height:1.9;padding-left:18px;margin:0">
+            <li>Идти по страницам пагинации (page=1..N)</li>
+            <li>На каждой странице собирать карточки объявлений</li>
+            <li>delay = <code>random.uniform(3, 7)</code> сек между страницами</li>
+            <li>Сохранять в CSV после каждых 50 записей</li>
+          </ul>
+        </div>
+      </div>
+      <div class="code-editor">
+        <div class="code-header"><div class="code-dots"><div class="code-dot r"></div><div class="code-dot y"></div><div class="code-dot g"></div></div><span class="code-lang">realty_scraper.py · шаблон</span></div>
+        <pre style="padding:16px;color:#e6edf3;font-size:.82rem;line-height:1.7;overflow-x:auto"><span style="color:#ff7b72">import</span> <span style="color:#79c0ff">requests, time, random, csv</span>
+<span style="color:#ff7b72">from</span> <span style="color:#79c0ff">bs4</span> <span style="color:#ff7b72">import</span> <span style="color:#d2a8ff">BeautifulSoup</span>
+
+HEADERS = {
+    <span style="color:#a5d6a7">"User-Agent"</span>: <span style="color:#a5d6a7">"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/122.0 Safari/537.36"</span>,
+    <span style="color:#a5d6a7">"Accept-Language"</span>: <span style="color:#a5d6a7">"ru-RU,ru;q=0.9"</span>,
+    <span style="color:#a5d6a7">"Referer"</span>: <span style="color:#a5d6a7">"https://example-realty.ru/"</span>
+}
+
+<span style="color:#ff7b72">def</span> <span style="color:#d2a8ff">scrape_page</span>(page_num):
+    url = <span style="color:#a5d6a7">f"https://example-realty.ru/moscow/rent/?p=<span style="color:#e36209">{page_num}</span>"</span>
+    resp = requests.<span style="color:#d2a8ff">get</span>(url, headers=HEADERS, timeout=15)
+    <span style="color:#ff7b72">if</span> resp.status_code != 200:
+        <span style="color:#d2a8ff">print</span>(<span style="color:#a5d6a7">f"Ошибка {resp.status_code} на стр. {page_num}"</span>)
+        <span style="color:#ff7b72">return</span> []
+    soup = <span style="color:#d2a8ff">BeautifulSoup</span>(resp.text, <span style="color:#a5d6a7">"html.parser"</span>)
+    results = []
+    <span style="color:#ff7b72">for</span> card <span style="color:#ff7b72">in</span> soup.<span style="color:#d2a8ff">select</span>(<span style="color:#a5d6a7">".offer-card"</span>):  <span style="color:#8b949e"># ← замени на реальный селектор!</span>
+        results.<span style="color:#d2a8ff">append</span>({
+            <span style="color:#a5d6a7">"price"</span>: card.<span style="color:#d2a8ff">select_one</span>(<span style="color:#a5d6a7">".price"</span>).<span style="color:#d2a8ff">get_text</span>(strip=<span style="color:#ff7b72">True</span>),
+            <span style="color:#a5d6a7">"area"</span>:  card.<span style="color:#d2a8ff">select_one</span>(<span style="color:#a5d6a7">".area"</span>).<span style="color:#d2a8ff">get_text</span>(strip=<span style="color:#ff7b72">True</span>),
+            <span style="color:#a5d6a7">"addr"</span>:  card.<span style="color:#d2a8ff">select_one</span>(<span style="color:#a5d6a7">".address"</span>).<span style="color:#d2a8ff">get_text</span>(strip=<span style="color:#ff7b72">True</span>),
+            <span style="color:#a5d6a7">"link"</span>:  card.<span style="color:#d2a8ff">select_one</span>(<span style="color:#a5d6a7">"a"</span>)[<span style="color:#a5d6a7">"href"</span>]
+        })
+    <span style="color:#ff7b72">return</span> results
+
+<span style="color:#ff7b72">with</span> <span style="color:#d2a8ff">open</span>(<span style="color:#a5d6a7">"apartments.csv"</span>, <span style="color:#a5d6a7">"w"</span>, newline=<span style="color:#a5d6a7">""</span>, encoding=<span style="color:#a5d6a7">"utf-8"</span>) <span style="color:#ff7b72">as</span> f:
+    writer = csv.<span style="color:#d2a8ff">DictWriter</span>(f, fieldnames=[<span style="color:#a5d6a7">"price","area","addr","link"</span>])
+    writer.<span style="color:#d2a8ff">writeheader</span>()
+    <span style="color:#ff7b72">for</span> page <span style="color:#ff7b72">in</span> <span style="color:#d2a8ff">range</span>(1, 20):  <span style="color:#8b949e"># 19 страниц</span>
+        rows = <span style="color:#d2a8ff">scrape_page</span>(page)
+        writer.<span style="color:#d2a8ff">writerows</span>(rows)
+        <span style="color:#d2a8ff">print</span>(<span style="color:#a5d6a7">f"Страница {page}: {len(rows)} объявлений"</span>)
+        time.<span style="color:#d2a8ff">sleep</span>(random.<span style="color:#d2a8ff">uniform</span>(3, 7))  <span style="color:#8b949e"># ← вежливая задержка</span></pre>
+      </div>
+      <div style="margin-top:14px;padding:12px;background:rgba(245,158,11,.07);border-radius:10px;border:1px solid rgba(245,158,11,.25);font-size:.83rem">
+        <b style="color:var(--amber)">💡 Совет:</b> Если сайт за Cloudflare — попробуй библиотеку <code>cloudscraper</code>
+        (<code>pip install cloudscraper</code>). Она автоматически обходит JS-challenge первый уровень.
+        Для более сложных случаев — Playwright с реальным браузером.
+      </div>
+    </div>
+
+    <!-- Task 1: Job search -->
+    <div id="ptask1" class="card" style="display:none;margin-bottom:24px">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+        <div style="font-size:2rem">💼</div>
+        <div>
+          <div style="font-weight:800;font-size:1rem">Задание 2: Парсинг вакансий с сайтов поиска работы</div>
+          <div style="font-size:.83rem;color:var(--text-m)">Прототип: hh.ru (есть API!), SuperJob, Труд.com, Indeed, LinkedIn Jobs</div>
+        </div>
+      </div>
+      <div style="font-size:.85rem;margin-bottom:16px;line-height:1.8;color:var(--text-m)">
+        <b style="color:var(--text)">Цель:</b> собрать базу вакансий Python-разработчика: название, компания, зарплата, город, навыки, ссылка.<br>
+        <b style="color:var(--text)">Что мешает:</b> авторизация (SuperJob), AJAX-пагинация, динамические классы (меняются при деплое),
+        у hh.ru <b>есть открытый API</b> — лучше использовать его вместо парсинга.
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px">
+        <div>
+          <div style="font-weight:700;font-size:.87rem;margin-bottom:8px;color:var(--cyan)">🔍 Что смотреть в DevTools</div>
+          <ul style="font-size:.82rem;color:var(--text-m);line-height:1.9;padding-left:18px;margin:0">
+            <li>Network → поиск запросов к <code>/search/vacancy</code></li>
+            <li>Параметры: <code>text=python&amp;area=1&amp;page=0</code></li>
+            <li>Нет XHR JSON? Значит SSR — парсим HTML</li>
+            <li>Проверить <code>data-*</code> атрибуты — часто там весь JSON объекта</li>
+          </ul>
+        </div>
+        <div>
+          <div style="font-weight:700;font-size:.87rem;margin-bottom:8px;color:var(--green)">✅ Трюк: JSON внутри HTML</div>
+          <ul style="font-size:.82rem;color:var(--text-m);line-height:1.9;padding-left:18px;margin:0">
+            <li>Ищи тег <code>&lt;script type="application/ld+json"&gt;</code></li>
+            <li>Или <code>&lt;script id="__NEXT_DATA__"&gt;</code> — Next.js прячет там весь стейт</li>
+            <li>Это JSON — просто <code>json.loads()</code>, никакого BeautifulSoup</li>
+            <li>Самый надёжный способ для SSR-сайтов</li>
+          </ul>
+        </div>
+      </div>
+      <div class="code-editor">
+        <div class="code-header"><div class="code-dots"><div class="code-dot r"></div><div class="code-dot y"></div><div class="code-dot g"></div></div><span class="code-lang">jobs_scraper.py · Next.js __NEXT_DATA__ трюк</span></div>
+        <pre style="padding:16px;color:#e6edf3;font-size:.82rem;line-height:1.7;overflow-x:auto"><span style="color:#ff7b72">import</span> <span style="color:#79c0ff">requests, json, time, random</span>
+<span style="color:#ff7b72">from</span> <span style="color:#79c0ff">bs4</span> <span style="color:#ff7b72">import</span> <span style="color:#d2a8ff">BeautifulSoup</span>
+
+HEADERS = {<span style="color:#a5d6a7">"User-Agent"</span>: <span style="color:#a5d6a7">"Mozilla/5.0 (X11; Linux x86_64) Chrome/122.0 Safari/537.36"</span>}
+
+<span style="color:#ff7b72">def</span> <span style="color:#d2a8ff">get_next_data</span>(url):
+    <span style="color:#a5d6a7">"""Извлекаем JSON из __NEXT_DATA__ — работает на Next.js сайтах"""</span>
+    resp = requests.<span style="color:#d2a8ff">get</span>(url, headers=HEADERS, timeout=15)
+    soup = <span style="color:#d2a8ff">BeautifulSoup</span>(resp.text, <span style="color:#a5d6a7">"html.parser"</span>)
+    tag  = soup.<span style="color:#d2a8ff">find</span>(<span style="color:#a5d6a7">"script"</span>, id=<span style="color:#a5d6a7">"__NEXT_DATA__"</span>)
+    <span style="color:#ff7b72">if not</span> tag:
+        <span style="color:#ff7b72">return None</span>
+    <span style="color:#ff7b72">return</span> json.<span style="color:#d2a8ff">loads</span>(tag.string)
+
+<span style="color:#ff7b72">def</span> <span style="color:#d2a8ff">get_ld_json</span>(url):
+    <span style="color:#a5d6a7">"""Достаём структурированные данные Schema.org из ld+json"""</span>
+    resp = requests.<span style="color:#d2a8ff">get</span>(url, headers=HEADERS, timeout=15)
+    soup = <span style="color:#d2a8ff">BeautifulSoup</span>(resp.text, <span style="color:#a5d6a7">"html.parser"</span>)
+    tag  = soup.<span style="color:#d2a8ff">find</span>(<span style="color:#a5d6a7">"script"</span>, type=<span style="color:#a5d6a7">"application/ld+json"</span>)
+    <span style="color:#ff7b72">if not</span> tag:
+        <span style="color:#ff7b72">return None</span>
+    <span style="color:#ff7b72">return</span> json.<span style="color:#d2a8ff">loads</span>(tag.string)
+
+<span style="color:#8b949e"># Пример: страницы вакансий с пагинацией</span>
+all_jobs = []
+<span style="color:#ff7b72">for</span> page <span style="color:#ff7b72">in</span> <span style="color:#d2a8ff">range</span>(0, 10):
+    url = <span style="color:#a5d6a7">f"https://example-jobs.ru/search?q=python&amp;page=<span style="color:#e36209">{page}</span>"</span>
+    data = <span style="color:#d2a8ff">get_next_data</span>(url)
+    <span style="color:#ff7b72">if</span> data:
+        <span style="color:#8b949e"># Путь к вакансиям зависит от структуры сайта — исследуй!</span>
+        vacancies = data.<span style="color:#d2a8ff">get</span>(<span style="color:#a5d6a7">"props"</span>, {}).<span style="color:#d2a8ff">get</span>(<span style="color:#a5d6a7">"pageProps"</span>, {}).<span style="color:#d2a8ff">get</span>(<span style="color:#a5d6a7">"vacancies"</span>, [])
+        all_jobs.<span style="color:#d2a8ff">extend</span>(vacancies)
+        <span style="color:#d2a8ff">print</span>(<span style="color:#a5d6a7">f"Страница {page}: {len(vacancies)} вакансий"</span>)
+    time.<span style="color:#d2a8ff">sleep</span>(random.<span style="color:#d2a8ff">uniform</span>(2, 5))</pre>
+      </div>
+      <div style="margin-top:14px;padding:12px;background:rgba(16,185,129,.06);border-radius:10px;border:1px solid rgba(16,185,129,.25);font-size:.83rem">
+        <b style="color:var(--green)">💡 Совет:</b> hh.ru имеет официальный <a href="https://dev.hh.ru" target="_blank" style="color:var(--cyan)">dev.hh.ru API</a>
+        — 200 запросов в минуту бесплатно. Всегда предпочитай официальное API парсингу, если оно есть.
+      </div>
+    </div>
+
+    <!-- Task 2: Price aggregator -->
+    <div id="ptask2" class="card" style="display:none;margin-bottom:24px">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+        <div style="font-size:2rem">🛒</div>
+        <div>
+          <div style="font-weight:800;font-size:1rem">Задание 3: Мониторинг цен товарного агрегатора</div>
+          <div style="font-size:.83rem;color:var(--text-m)">Прототип: DNS, Яндекс.Маркет, Wildberries, OZON, Amazon, eBay</div>
+        </div>
+      </div>
+      <div style="font-size:.85rem;margin-bottom:16px;line-height:1.8;color:var(--text-m)">
+        <b style="color:var(--text)">Цель:</b> выбрать категорию (ноутбуки, видеокарты, смартфоны) и собирать цены раз в день, строить график динамики.<br>
+        <b style="color:var(--text)">Что мешает:</b> JavaScript-цены (React), Bot-score (Wildberries), сплит-тесты (разные цены для разных пользователей),
+        геолокация (цены различаются по регионам).
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px">
+        <div>
+          <div style="font-weight:700;font-size:.87rem;margin-bottom:8px;color:var(--cyan)">🔍 Wildberries: скрытый API</div>
+          <ul style="font-size:.82rem;color:var(--text-m);line-height:1.9;padding-left:18px;margin:0">
+            <li>WB использует внутренний JSON API — нет защиты</li>
+            <li>Каталог: <code>catalog.wb.ru/catalog/{cat}/v1/filters</code></li>
+            <li>Товары: <code>catalog.wb.ru/catalog/{cat}/catalog?...</code></li>
+            <li>Ответ — чистый JSON с ценами, рейтингами, фото</li>
+          </ul>
+        </div>
+        <div>
+          <div style="font-weight:700;font-size:.87rem;margin-bottom:8px;color:var(--purple)">🤖 Playwright для React-цен</div>
+          <ul style="font-size:.82rem;color:var(--text-m);line-height:1.9;padding-left:18px;margin:0">
+            <li>Запустить headless Chromium</li>
+            <li>Ждать <code>wait_for_selector('.price-block')</code></li>
+            <li>Можно перехватывать network-ответы через <code>page.on('response', ...)</code></li>
+            <li>Сохранять скриншот как доказательство ценника</li>
+          </ul>
+        </div>
+      </div>
+      <div class="code-editor">
+        <div class="code-header"><div class="code-dots"><div class="code-dot r"></div><div class="code-dot y"></div><div class="code-dot g"></div></div><span class="code-lang">price_monitor.py · Playwright + перехват сетевых запросов</span></div>
+        <pre style="padding:16px;color:#e6edf3;font-size:.82rem;line-height:1.7;overflow-x:auto"><span style="color:#ff7b72">import</span> <span style="color:#79c0ff">json, csv, time</span>
+<span style="color:#ff7b72">from</span> <span style="color:#79c0ff">datetime</span> <span style="color:#ff7b72">import</span> <span style="color:#d2a8ff">datetime</span>
+<span style="color:#ff7b72">from</span> <span style="color:#79c0ff">playwright.sync_api</span> <span style="color:#ff7b72">import</span> <span style="color:#d2a8ff">sync_playwright</span>
+
+prices_log = []
+
+<span style="color:#ff7b72">def</span> <span style="color:#d2a8ff">intercept_response</span>(response):
+    <span style="color:#a5d6a7">"""Перехватываем JSON-ответы API магазина"""</span>
+    <span style="color:#ff7b72">if</span> <span style="color:#a5d6a7">"api/catalog"</span> <span style="color:#ff7b72">in</span> response.url <span style="color:#ff7b72">and</span> response.status == 200:
+        <span style="color:#ff7b72">try</span>:
+            data = response.<span style="color:#d2a8ff">json</span>()
+            <span style="color:#ff7b72">for</span> item <span style="color:#ff7b72">in</span> data.<span style="color:#d2a8ff">get</span>(<span style="color:#a5d6a7">"items"</span>, []):
+                prices_log.<span style="color:#d2a8ff">append</span>({
+                    <span style="color:#a5d6a7">"date"</span>:  <span style="color:#d2a8ff">datetime</span>.<span style="color:#d2a8ff">now</span>().<span style="color:#d2a8ff">strftime</span>(<span style="color:#a5d6a7">"%Y-%m-%d"</span>),
+                    <span style="color:#a5d6a7">"name"</span>:  item.<span style="color:#d2a8ff">get</span>(<span style="color:#a5d6a7">"name"</span>),
+                    <span style="color:#a5d6a7">"price"</span>: item.<span style="color:#d2a8ff">get</span>(<span style="color:#a5d6a7">"salePriceU"</span>, 0) // 100
+                })
+        <span style="color:#ff7b72">except</span>: <span style="color:#ff7b72">pass</span>
+
+<span style="color:#ff7b72">with</span> <span style="color:#d2a8ff">sync_playwright</span>() <span style="color:#ff7b72">as</span> p:
+    browser = p.chromium.<span style="color:#d2a8ff">launch</span>(headless=<span style="color:#ff7b72">True</span>)
+    page = browser.<span style="color:#d2a8ff">new_page</span>()
+    page.<span style="color:#d2a8ff">on</span>(<span style="color:#a5d6a7">"response"</span>, intercept_response)  <span style="color:#8b949e"># ← слушаем ВСЕ XHR</span>
+    page.<span style="color:#d2a8ff">goto</span>(<span style="color:#a5d6a7">"https://example-shop.ru/catalog/laptops/"</span>)
+    page.<span style="color:#d2a8ff">wait_for_load_state</span>(<span style="color:#a5d6a7">"networkidle"</span>)  <span style="color:#8b949e"># ждём ALL запросов</span>
+    <span style="color:#8b949e"># Скролл вниз — загружаем infinite scroll</span>
+    <span style="color:#ff7b72">for</span> _ <span style="color:#ff7b72">in</span> <span style="color:#d2a8ff">range</span>(5):
+        page.<span style="color:#d2a8ff">keyboard</span>.<span style="color:#d2a8ff">press</span>(<span style="color:#a5d6a7">"End"</span>)
+        time.<span style="color:#d2a8ff">sleep</span>(2)
+    browser.<span style="color:#d2a8ff">close</span>()
+
+<span style="color:#8b949e"># Сохраняем в CSV для графика</span>
+<span style="color:#ff7b72">with</span> <span style="color:#d2a8ff">open</span>(<span style="color:#a5d6a7">"prices.csv"</span>, <span style="color:#a5d6a7">"a"</span>, newline=<span style="color:#a5d6a7">""</span>) <span style="color:#ff7b72">as</span> f:
+    w = csv.<span style="color:#d2a8ff">DictWriter</span>(f, fieldnames=[<span style="color:#a5d6a7">"date","name","price"</span>])
+    w.<span style="color:#d2a8ff">writerows</span>(prices_log)
+<span style="color:#d2a8ff">print</span>(<span style="color:#a5d6a7">f"Сохранено {len(prices_log)} записей"</span>)</pre>
+      </div>
+      <div style="margin-top:14px;padding:12px;background:rgba(139,92,246,.06);border-radius:10px;border:1px solid rgba(139,92,246,.25);font-size:.83rem">
+        <b style="color:var(--purple)">💡 Совет:</b> Запускай скрипт раз в день через <b>cron</b> (Linux) или <b>Планировщик задач</b> (Windows).
+        Через неделю у тебя будет датасет с динамикой цен — отличная основа для ML-модели предсказания распродаж.
+      </div>
+    </div>
+
+    <!-- Legal -->
+    <div class="card" style="border-color:rgba(239,68,68,.3);background:rgba(239,68,68,.04)">
+      <div style="display:flex;gap:12px;align-items:flex-start">
+        <div style="font-size:1.4rem;flex-shrink:0">⚖️</div>
+        <div>
+          <div style="font-weight:700;margin-bottom:6px;color:var(--red)">Юридические аспекты</div>
+          <ul class="pill-list">
+            <li>Всегда проверяй <b>robots.txt</b> перед скрейпингом</li>
+            <li>Соблюдай <b>Terms of Service</b> сайта</li>
+            <li><b>GDPR</b> (ЕС) — штрафы до 4% оборота за нарушение приватности</li>
+            <li>Не перегружай сервер — ставь <b>задержки между запросами</b></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div style="text-align:right;margin-top:24px">
+      <button class="btn btn-outline" style="margin-right:10px" onclick="switchTab(7)">← Практика</button>
+      <a href="quiz.html" class="btn btn-primary">Перейти к тесту →</a>
+    </div>
+  </div>
+
+</div>
+
+<!-- Success overlay -->
+<div class="success-overlay" id="successOverlay">
+  <div class="success-modal">
+    <div style="font-size:3.5rem;margin-bottom:12px">🎊</div>
+    <div style="font-size:1.4rem;font-weight:900;color:var(--green);margin-bottom:8px">Все задания выполнены!</div>
+    <div style="color:var(--text-m);font-size:.95rem;margin-bottom:24px;line-height:1.7">
+      Ты успешно освоил VK API.<br>Тест для закрепления открыт ниже ↓
+    </div>
+    <button class="btn btn-success btn-lg" onclick="document.getElementById('successOverlay').style.display='none';document.getElementById('inlineQuiz').scrollIntoView({behavior:'smooth'})">Пройти тест ↓</button>
+    <br><br>
+    <button style="background:none;border:none;color:var(--text-d);font-size:.85rem;cursor:pointer;font-family:inherit"
+      onclick="document.getElementById('successOverlay').style.display='none'">Остаться на странице</button>
+  </div>
+</div>
+
+<script>
+/* ══════════════════════════════════════════════
+   TABS
+   ══════════════════════════════════════════════ */
+function switchTab(n) {
+  document.querySelectorAll('.tab-btn').forEach((b,i) => b.classList.toggle('active', i===n));
+  document.querySelectorAll('.tab-panel').forEach((p,i) => p.classList.toggle('active', i===n));
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+/* ══════════════════════════════════════════════
+   CASE SCENARIOS (Tab 5)
+   ══════════════════════════════════════════════ */
+function switchCase(n) {
+  document.getElementById('case0').style.display = n===0 ? '' : 'none';
+  document.getElementById('case1').style.display = n===1 ? '' : 'none';
+  document.getElementById('caseBtn0').className = 'btn ' + (n===0 ? 'btn-primary' : 'btn-outline');
+  document.getElementById('caseBtn1').className = 'btn ' + (n===1 ? 'btn-primary' : 'btn-outline');
+  document.getElementById('caseBtn0').style.fontSize = '.88rem';
+  document.getElementById('caseBtn0').style.padding = '9px 20px';
+  document.getElementById('caseBtn1').style.fontSize = '.88rem';
+  document.getElementById('caseBtn1').style.padding = '9px 20px';
+}
+
+const ANSWERS = {
+  '0-0': { correct: 1, msgs: [
+    '❌ CRM показывает покупки — но не реакцию в соцсетях. Нам нужны упоминания!',
+    '✅ Верно! Сначала — сбор данных из соцсетей. API VK/Telegram даст нам сырые данные для анализа.',
+    '❌ Реклама без понимания аудитории может усилить негатив. Данные — первый шаг!'
+  ]},
+  '0-1': { correct: 1, msgs: [
+    '❌ LDA хорош, но он выявляет темы, а не отношение к продукту. Нам нужна тональность!',
+    '✅ Верно! Sentiment Analysis покажет, сколько людей довольны/недовольны и почему.',
+    '❌ NER найдёт упоминания брендов, но не скажет нам об эмоциональной окраске постов.'
+  ]},
+  '0-2': { correct: 1, msgs: [
+    '❌ Удаление негатива — плохая практика. Пользователи заметят и доверие упадёт (Streisand effect).',
+    '✅ Именно! Дашборд + передача в PR позволяет работать с негативом конструктивно.',
+    '❌ 15% негатива — это сигнал. Нужно выяснить причину и передать команде поддержки.'
+  ]},
+  '1-0': { correct: 1, msgs: [
+    '❌ Sentiment покажет тональность, но не кто является центром распространения.',
+    '✅ Правильно! Betweenness centrality выявляет узлы-посредники — именно через них расходится контент.',
+    '❌ Хэштеги полезны, но не дают информации о структуре сети распространения.'
+  ]},
+  '1-1': { correct: 0, msgs: [
+    '✅ Верно! NLP + факт-чекинг базы (IFCN, Snopes) — реальный подход к верификации.',
+    '❌ Количество подписчиков не говорит о достоверности — фейки часто у крупных аккаунтов.',
+    '❌ Краудсорсинг ненадёжен и медленен. Нужна автоматизация.'
+  ]}
+};
+
+function answer(caseId, stepId, choice) {
+  const key = `${caseId}-${stepId}`;
+  const data = ANSWERS[key];
+  if (!data) return;
+  const fb = document.getElementById(`fb-c${caseId}s${stepId}`);
+  const nextBtn = document.getElementById(`next-c${caseId}s${stepId}`);
+  const btns = document.querySelectorAll(`#c${caseId}s${stepId} .scenario-choice`);
+  btns.forEach(b => { b.disabled = true; });
+  btns[data.correct].classList.add('correct-choice');
+  if (choice !== data.correct) btns[choice].classList.add('wrong-choice');
+  fb.textContent = data.msgs[choice];
+  fb.className = 's-feedback show ' + (choice === data.correct ? 'correct' : 'wrong');
+  nextBtn.classList.add('show');
+  const dots = document.querySelectorAll(`#prog${caseId} .sp-dot`);
+  dots[stepId].classList.remove('active');
+  dots[stepId].classList.add('done');
+  if (dots[stepId+1]) dots[stepId+1].classList.add('active');
+}
+
+function nextStep(caseId, stepId) {
+  document.querySelectorAll(`#case${caseId} .scenario-step`).forEach(s => s.classList.remove('active'));
+  const next = document.getElementById(`c${caseId}s${stepId}`);
+  if (next) next.classList.add('active');
+}
+
+/* ══════════════════════════════════════════════
+   VK API PRACTICE (Tab 6)
+   ══════════════════════════════════════════════ */
+const MOCK = {
+  0: {
+    correct: 'users.get',
+    delay: [400, 800, 1200],
+    lines: [
+      { cls:'t-prompt', txt:'$ ' }, { cls:'t-cmd', txt:'python3 vk_task1.py\n' },
+      { cls:'t-ok',  txt:'✓ Подключение к api.vk.com... OK\n' },
+      { cls:'t-ok',  txt:'✓ Метод: users.get  |  user_ids=1\n' },
+      { cls:'t-ok',  txt:'✓ Ответ получен (HTTP 200)\n\n' },
+      { cls:'t-json',  txt:'{\n  ' },
+      { cls:'t-key',   txt:'"response"' }, { cls:'t-json', txt:': [{\n    ' },
+      { cls:'t-key',   txt:'"id"' },             { cls:'t-json', txt:': ' }, { cls:'t-num', txt:'1' }, { cls:'t-json', txt:',\n    ' },
+      { cls:'t-key',   txt:'"first_name"' },      { cls:'t-json', txt:': ' }, { cls:'t-str', txt:'"Павел"' }, { cls:'t-json', txt:',\n    ' },
+      { cls:'t-key',   txt:'"last_name"' },       { cls:'t-json', txt:': ' }, { cls:'t-str', txt:'"Дуров"' }, { cls:'t-json', txt:',\n    ' },
+      { cls:'t-key',   txt:'"followers_count"' }, { cls:'t-json', txt:': ' }, { cls:'t-num', txt:'8245730' }, { cls:'t-json', txt:',\n    ' },
+      { cls:'t-key',   txt:'"city"' },            { cls:'t-json', txt:': { ' },
+      { cls:'t-key',   txt:'"id"' }, { cls:'t-json', txt:': ' }, { cls:'t-num', txt:'2' }, { cls:'t-json', txt:', ' },
+      { cls:'t-key',   txt:'"title"' }, { cls:'t-json', txt:': ' }, { cls:'t-str', txt:'"Санкт-Петербург"' },
+      { cls:'t-json',  txt:' },\n    ' },
+      { cls:'t-key',   txt:'"photo_200"' }, { cls:'t-json', txt:': ' }, { cls:'t-str', txt:'"https://vk.com/images/camera_200.png"' },
+      { cls:'t-json',  txt:'\n  }]\n}' }
+    ]
+  },
+  1: {
+    correct: 'friends.get',
+    delay: [350, 750, 1100],
+    lines: [
+      { cls:'t-prompt', txt:'$ ' }, { cls:'t-cmd', txt:'python3 vk_task2.py\n' },
+      { cls:'t-ok', txt:'✓ Подключение к api.vk.com... OK\n' },
+      { cls:'t-ok', txt:'✓ Метод: friends.get  |  user_id=1\n' },
+      { cls:'t-ok', txt:'✓ Ответ получен (HTTP 200)\n\n' },
+      { cls:'t-ok', txt:'Всего друзей: 127\n\n' },
+      { cls:'t-json', txt:'{\n  ' },
+      { cls:'t-key', txt:'"response"' }, { cls:'t-json', txt:': {\n    ' },
+      { cls:'t-key', txt:'"count"' }, { cls:'t-json', txt:': ' }, { cls:'t-num', txt:'127' }, { cls:'t-json', txt:',\n    ' },
+      { cls:'t-key', txt:'"items"' }, { cls:'t-json', txt:': [\n      {\n        ' },
+      { cls:'t-key', txt:'"id"' }, { cls:'t-json', txt:': ' }, { cls:'t-num', txt:'23400812' }, { cls:'t-json', txt:', ' },
+      { cls:'t-key', txt:'"first_name"' }, { cls:'t-json', txt:': ' }, { cls:'t-str', txt:'"Анна"' }, { cls:'t-json', txt:', ' },
+      { cls:'t-key', txt:'"last_name"' }, { cls:'t-json', txt:': ' }, { cls:'t-str', txt:'"Петрова"' }, { cls:'t-json', txt:',\n        ' },
+      { cls:'t-key', txt:'"city"' }, { cls:'t-json', txt:': { ' }, { cls:'t-key', txt:'"title"' }, { cls:'t-json', txt:': ' },
+      { cls:'t-str', txt:'"Москва"' }, { cls:'t-json', txt:' }, ' }, { cls:'t-key', txt:'"online"' }, { cls:'t-json', txt:': ' },
+      { cls:'t-num', txt:'1' }, { cls:'t-json', txt:'\n      },\n      ' },
+      { cls:'t-dim', txt:'... ещё 126 объектов\n    ]\n  }\n}' }
+    ]
+  },
+  2: {
+    correct: 'groups.get',
+    delay: [320, 720, 1050],
+    lines: [
+      { cls:'t-prompt', txt:'$ ' }, { cls:'t-cmd', txt:'python3 vk_task3.py\n' },
+      { cls:'t-ok', txt:'✓ Подключение к api.vk.com... OK\n' },
+      { cls:'t-ok', txt:'✓ Метод: groups.get  |  user_id=1, filter=groups\n' },
+      { cls:'t-ok', txt:'✓ Ответ получен (HTTP 200)\n\n' },
+      { cls:'t-json', txt:'{\n  ' },
+      { cls:'t-key', txt:'"response"' }, { cls:'t-json', txt:': {\n    ' },
+      { cls:'t-key', txt:'"count"' }, { cls:'t-json', txt:': ' }, { cls:'t-num', txt:'34' }, { cls:'t-json', txt:',\n    ' },
+      { cls:'t-key', txt:'"items"' }, { cls:'t-json', txt:': [\n      {\n        ' },
+      { cls:'t-key', txt:'"id"' }, { cls:'t-json', txt:': ' }, { cls:'t-num', txt:'1' }, { cls:'t-json', txt:',\n        ' },
+      { cls:'t-key', txt:'"name"' }, { cls:'t-json', txt:': ' }, { cls:'t-str', txt:'"ВКонтакте"' }, { cls:'t-json', txt:',\n        ' },
+      { cls:'t-key', txt:'"screen_name"' }, { cls:'t-json', txt:': ' }, { cls:'t-str', txt:'"vk"' }, { cls:'t-json', txt:',\n        ' },
+      { cls:'t-key', txt:'"members_count"' }, { cls:'t-json', txt:': ' }, { cls:'t-num', txt:'20190000' }, { cls:'t-json', txt:',\n        ' },
+      { cls:'t-key', txt:'"activity"' }, { cls:'t-json', txt:': ' }, { cls:'t-str', txt:'"Интернет-компания"' },
+      { cls:'t-json', txt:'\n      },\n      ' },
+      { cls:'t-dim', txt:'... ещё 33 сообщества\n    ]\n  }\n}' }
+    ]
+  }
+};
+
+const done = [false, false, false];
+let curTask = 0;
+
+function goTask(n) {
+  curTask = n;
+  document.querySelectorAll('.task-panel').forEach((p,i) => p.classList.toggle('active', i===n));
+  document.querySelectorAll('.task-nav-btn').forEach((b,i) => {
+    b.classList.toggle('active', i===n && !done[i]);
+    b.classList.toggle('done', done[i]);
+  });
+}
+
+function toggleHint(n) {
+  const h   = document.getElementById('hint'+n);
+  const btn = document.getElementById('htbtn'+n);
+  const hidden = h.style.display === 'none';
+  h.style.display   = hidden ? 'block' : 'none';
+  btn.textContent   = hidden ? '▲ Скрыть подсказку' : '▼ Показать подсказку';
+}
+
+function runTask(n) {
+  const inp = document.getElementById('inp'+n);
+  const val = inp.value.trim().toLowerCase().replace(/['"]/g,'');
+  const correct = MOCK[n].correct;
+
+  if (val !== correct) {
+    inp.classList.remove('ok','fail');
+    void inp.offsetWidth;
+    inp.classList.add('fail');
+    const tb = document.getElementById('termBody'+n);
+    tb.innerHTML = `<span class="t-prompt">$ </span><span class="t-cmd">python3 vk_task${n+1}.py</span><br><span class="t-err">❌ APIError: Unknown method "${val}" — проверь название метода</span>`;
+    setTimeout(() => inp.classList.remove('fail'), 800);
+    return;
+  }
+
+  inp.classList.add('ok');
+  inp.disabled = true;
+  document.getElementById('runBtn'+n).disabled = true;
+
+  const tb = document.getElementById('termBody'+n);
+  tb.innerHTML = '';
+  const lines = MOCK[n].lines;
+  let delay = 0;
+  lines.forEach((l, i) => {
+    delay += (i === 0 ? 0 : Math.random() * 40 + 20);
+    setTimeout(() => {
+      const span = document.createElement('span');
+      span.className = l.cls;
+      span.textContent = l.txt;
+      tb.appendChild(span);
+      tb.scrollTop = tb.scrollHeight;
+      if (i === lines.length - 1) onTaskDone(n);
+    }, delay);
+  });
+}
+
+function onTaskDone(n) {
+  done[n] = true;
+  const chip = document.getElementById('chip'+n);
+  chip.classList.add('done');
+  chip.innerHTML = `<div class="dot"></div>✓ Задание ${n+1}`;
+  const btn = document.getElementById('tnb'+n);
+  btn.classList.remove('active'); btn.classList.add('done');
+  const gc = document.getElementById('gc'+n);
+  gc.style.background = 'rgba(16,185,129,.12)';
+  gc.style.borderColor = 'var(--green)';
+  gc.style.color = 'var(--green)';
+  gc.textContent = '✓ Задание ' + (n+1);
+  if (done.every(Boolean)) {
+    document.getElementById('gateTitle').textContent = '🏆 Все задания выполнены!';
+    document.getElementById('gateText').textContent = 'Отличная работа! Тест для закрепления открыт ниже ↓';
+    const iqEl = document.getElementById('inlineQuiz');
+    iqEl.style.display = 'block';
+    setTimeout(() => iqEl.scrollIntoView({ behavior: 'smooth', block: 'start' }), 1200);
+    localStorage.setItem('labDone', '1');
+    setTimeout(() => {
+      document.getElementById('successOverlay').style.display = 'flex';
+      launchConfetti();
+    }, 800);
+  }
+}
+
+/* ══════════════════════════════════════════════
+   INLINE QUIZ
+   ══════════════════════════════════════════════ */
+const QUESTIONS = [
+  {
+    q: 'Что такое Sentiment Analysis в контексте анализа соцсетей?',
+    opts: ['Построение и визуализация социальных графов','Определение эмоциональной окраски текста (позитив / нейтрал / негатив)','Классификация изображений при помощи нейронных сетей','Токенизация и лемматизация текстового корпуса'],
+    ans: 1,
+    exp: '✅ Sentiment Analysis — метод NLP для автоматического определения эмоциональной окраски текста. Используется для мониторинга аудитории.'
+  },
+  {
+    q: 'Какие методы Topic Modeling чаще всего применяются для выделения скрытых тем?',
+    opts: ['NER и SVM','MapReduce и HDFS','LDA и NMF','CNN и LSTM'],
+    ans: 2,
+    exp: '✅ LDA (Latent Dirichlet Allocation) и NMF (Non-Negative Matrix Factorization) — стандартные методы. Находят скрытые темы без разметки.'
+  },
+  {
+    q: 'Какая из баз данных является NoSQL и подходит для хранения неструктурированных данных?',
+    opts: ['MySQL','PostgreSQL','MongoDB','SQLite'],
+    ans: 2,
+    exp: '✅ MongoDB — документоориентированная NoSQL СУБД, хранит данные в формате BSON (подобно JSON). Идеальна для постов, профилей, комментариев.'
+  },
+  {
+    q: 'Что означает аббревиатура NER в NLP?',
+    opts: ['Network Edge Routing','Named Entity Recognition','Node Embedding Representation','Normalized Extraction Result'],
+    ans: 1,
+    exp: '✅ NER (Named Entity Recognition) — выявление именованных сущностей: людей, организаций, городов, дат. Ключевой инструмент для структурирования текста.'
+  },
+  {
+    q: 'Для чего используется Apache Spark Streaming?',
+    opts: ['Долгосрочное хранение неструктурированных данных','Построение SQL-запросов к реляционным СУБД','Обработка и анализ данных в режиме реального времени','Классификация изображений в соцсетях'],
+    ans: 2,
+    exp: '✅ Spark Streaming обрабатывает непрерывные потоки (Twitter, Kafka, VK). Micro-batch архитектура, задержка — секунды.'
+  },
+  {
+    q: 'Какая Python-библиотека специализируется на NLP с поддержкой нескольких языков?',
+    opts: ['Pandas','NumPy','Matplotlib','SpaCy'],
+    ans: 3,
+    exp: '✅ SpaCy — производительная NLP-библиотека с поддержкой русского, английского и 60+ языков. Готовые модели для NER, лемматизации, синтаксиса.'
+  },
+  {
+    q: 'Data Lake отличается от Data Warehouse тем, что…',
+    opts: ['Data Lake хранит только структурированные таблицы','Data Lake хранит сырые данные в исходном формате без предварительной обработки','Data Lake — инструмент визуализации аналитики','Data Lake работает только с SQL-запросами'],
+    ans: 1,
+    exp: '✅ Data Lake (озеро данных) принимает данные любого типа (видео, JSON, логи) в сыром виде. Data Warehouse — уже очищенные данные для аналитики.'
+  },
+  {
+    q: 'Какой европейский регламент регулирует защиту персональных данных?',
+    opts: ['HIPAA','PCI DSS','GDPR','ISO 27001'],
+    ans: 2,
+    exp: '✅ GDPR (General Data Protection Regulation) — регламент ЕС с 2018 года. Обязывает получать явное согласие. Штрафы — до 4% от годового оборота.'
+  },
+  {
+    q: 'Компания Cambridge Analytica использовала данные Facebook для:',
+    opts: ['Разработки рекомендательных алгоритмов для Netflix','Политического таргетинга на выборах в США и Brexit','Создания системы распознавания лиц для полиции','Построения кредитного скоринга для банков'],
+    ans: 1,
+    exp: '✅ Cambridge Analytica собрала данные 87 млн профилей Facebook через quiz-приложение и использовала их для психографического таргетинга на выборах. Штраф Facebook — $5 млрд.'
+  },
+  {
+    q: 'Что такое «метаданные» мобильного приложения?',
+    opts: ['Основной контент приложения (тексты, фото, видео)','Информация О данных: геолокация, время, устройство, клики','Исходный код приложения и его зависимости','Рекламные баннеры внутри приложения'],
+    ans: 1,
+    exp: '✅ Метаданные — это данные о данных: геолокация (GPS/Wi-Fi), время активности, модель устройства, рекламный ID, кликстрим. Используются для профилирования и таргетинга.'
+  },
+  {
+    q: 'Какой российский закон регулирует защиту персональных данных?',
+    opts: ['GDPR','CCPA','ФЗ-152','ISO 27001'],
+    ans: 2,
+    exp: '✅ ФЗ-152 «О персональных данных» — российский закон, требующий хранения данных россиян на территории РФ и получения согласия на обработку. Контроль — Роскомнадзор.'
+  }
+];
+
+let iqCur=0, iqScore=0, iqAnswered=false, iqTimer=null, iqTimeLeft=30, iqAnswers=[];
+
+function iqStart() {
+  iqCur=0; iqScore=0; iqAnswered=false; iqAnswers=[];
+  document.getElementById('iqIntro').style.display='none';
+  document.getElementById('iqMain').style.display='block';
+  iqShow();
+}
+function iqShow() {
+  const Q=QUESTIONS[iqCur]; iqAnswered=false;
+  document.getElementById('iqProgFill').style.width=(iqCur/QUESTIONS.length*100)+'%';
+  document.getElementById('iqCounter').textContent=`Вопрос ${iqCur+1} из ${QUESTIONS.length}`;
+  document.getElementById('iqText').textContent=Q.q;
+  const opts=document.getElementById('iqOptions'); opts.innerHTML='';
+  ['A','B','C','D'].forEach((l,i)=>{
+    const btn=document.createElement('button');
+    btn.className='opt-btn';
+    btn.innerHTML=`<span class="opt-letter">${l}</span> <span>${Q.opts[i]}</span>`;
+    btn.onclick=()=>iqSelect(i);
+    opts.appendChild(btn);
+  });
+  const expl=document.getElementById('iqExplain'); expl.style.display='none'; expl.textContent='';
+  const nb=document.getElementById('iqNextBtn'); nb.style.display='none'; nb.textContent='Следующий →';
+  clearInterval(iqTimer); iqTimeLeft=30; iqUpdateTimer();
+  iqTimer=setInterval(()=>{ iqTimeLeft--; iqUpdateTimer(); if(iqTimeLeft<=0){clearInterval(iqTimer);if(!iqAnswered)iqAutoFail();} },1000);
+}
+function iqUpdateTimer(){
+  const el=document.getElementById('iqTimer');
+  el.textContent=`⏱ ${iqTimeLeft}`;
+  el.className='quiz-timer'+(iqTimeLeft<=8?' warn':'');
+}
+function iqSelect(chosen){
+  if(iqAnswered)return; iqAnswered=true; clearInterval(iqTimer);
+  const Q=QUESTIONS[iqCur];
+  const btns=document.querySelectorAll('#iqOptions .opt-btn');
+  btns.forEach(b=>b.disabled=true);
+  btns[Q.ans].classList.add('correct');
+  if(chosen!==Q.ans){btns[chosen].classList.add('wrong');iqAnswers.push({q:iqCur,correct:false,chosen});}
+  else{iqScore++;iqAnswers.push({q:iqCur,correct:true,chosen});}
+  const expl=document.getElementById('iqExplain'); expl.textContent=Q.exp; expl.style.display='block';
+  const nb=document.getElementById('iqNextBtn'); nb.style.display='inline-flex';
+  if(iqCur===QUESTIONS.length-1) nb.textContent='Завершить →';
+}
+function iqAutoFail(){
+  iqAnswered=true;
+  const Q=QUESTIONS[iqCur];
+  const btns=document.querySelectorAll('#iqOptions .opt-btn');
+  btns.forEach(b=>b.disabled=true);
+  btns[Q.ans].classList.add('correct');
+  iqAnswers.push({q:iqCur,correct:false,chosen:-1});
+  const expl=document.getElementById('iqExplain'); expl.textContent='⏰ Время вышло! '+Q.exp; expl.style.display='block';
+  const nb=document.getElementById('iqNextBtn'); nb.style.display='inline-flex';
+  if(iqCur===QUESTIONS.length-1) nb.textContent='Завершить →';
+}
+function iqNext(){
+  iqCur++;
+  if(iqCur>=QUESTIONS.length){ iqFinish(); }
+  else{
+    const card=document.getElementById('iqCard');
+    card.style.animation='none'; void card.offsetWidth; card.style.animation='fadeInUp .35s ease';
+    iqShow();
+  }
+}
+function iqFinish(){
+  clearInterval(iqTimer);
+  document.getElementById('iqMain').style.display='none';
+  document.getElementById('iqEnd').style.display='block';
+  const pct=Math.round(iqScore/QUESTIONS.length*100);
+  localStorage.setItem('quizScore',iqScore);
+  localStorage.setItem('quizTotal',QUESTIONS.length);
+  localStorage.setItem('quizPct',pct);
+  localStorage.setItem('quizAnswers',JSON.stringify(iqAnswers));
+  localStorage.setItem('quizDone','1');
+  let icon,title,sub,color;
+  if(pct>=88){icon='🏆';title='Превосходно!';color='var(--green)';sub='Блестящее владение материалом. Настоящий Big Data аналитик!'}
+  else if(pct>=63){icon='🎯';title='Хороший результат!';color='var(--cyan)';sub='Посмотри разбор ошибок на странице результатов.'}
+  else if(pct>=38){icon='📚';title='Есть над чем поработать';color='var(--amber)';sub='Повтори теоретическую часть и пройди тест ещё раз.'}
+  else{icon='💪';title='Не сдавайся!';color='var(--red)';sub='Вернись к теории и попробуй ещё раз.'}
+  document.getElementById('iqEndIcon').textContent=icon;
+  document.getElementById('iqEndTitle').textContent=title;
+  document.getElementById('iqEndSub').textContent=sub;
+  document.getElementById('iqEndScore').textContent=iqScore+'/'+QUESTIONS.length;
+  document.getElementById('iqEndScore').style.color=color;
+  document.getElementById('iqEndPct').textContent=pct+'%';
+  document.getElementById('iqEndPct').style.color=color;
+}
+function iqRestart(){
+  document.getElementById('iqEnd').style.display='none';
+  document.getElementById('iqMain').style.display='none';
+  document.getElementById('iqIntro').style.display='block';
+}
+
+/* ══════════════════════════════════════════════
+   OPEN API LIVE CALLS (Tab 7)
+   ══════════════════════════════════════════════ */
+/* ── Practical task switcher (Tab 8) ── */
+function switchPTask(n) {
+  const COLORS = [
+    {border:'rgba(16,185,129,.5)', color:'var(--green)', bg:'rgba(16,185,129,.1)'},
+    {border:'rgba(59,130,246,.4)', color:'var(--blue)',  bg:'rgba(59,130,246,.08)'},
+    {border:'rgba(139,92,246,.4)', color:'var(--purple)','bg':'rgba(139,92,246,.08)'}
+  ];
+  [0,1,2].forEach(i => {
+    const btn = document.getElementById('ptab'+i);
+    const task = document.getElementById('ptask'+i);
+    if (task) task.style.display = i === n ? '' : 'none';
+    if (btn) {
+      btn.style.borderColor = COLORS[i].border;
+      btn.style.color = COLORS[i].color;
+      btn.style.background = i === n ? COLORS[i].bg : 'transparent';
+      btn.style.fontWeight = i === n ? '700' : '600';
+    }
+  });
+}
+/* ── helpers for interactive API cards ── */
+function updateCountryUrl() {
+  const v = (document.getElementById('inp-rc').value.trim() || 'russia').toLowerCase();
+  document.getElementById('url-rc').textContent =
+    `https://restcountries.com/v3.1/name/${v}?fields=name,capital,population,languages,currencies`;
+}
+function callCountry() {
+  const v = (document.getElementById('inp-rc').value.trim() || 'russia').toLowerCase();
+  const url = `https://restcountries.com/v3.1/name/${encodeURIComponent(v)}?fields=name,capital,population,languages,currencies`;
+  document.getElementById('url-rc').textContent = url.replace(/%20/g,' ');
+  callApi('rc', url);
+}
+function updatePokemonUrl() {
+  const v = (document.getElementById('inp-pk').value.trim() || 'pikachu').toLowerCase();
+  document.getElementById('url-pk').textContent = `https://pokeapi.co/api/v2/pokemon/${v}`;
+}
+function callPokemon() {
+  const v = (document.getElementById('inp-pk').value.trim() || 'pikachu').toLowerCase();
+  document.getElementById('url-pk').textContent = `https://pokeapi.co/api/v2/pokemon/${v}`;
+  callApi('pk', `https://pokeapi.co/api/v2/pokemon/${encodeURIComponent(v)}`);
+}
+function updateWeatherUrl() {
+  const [lat, lon] = document.getElementById('sel-wt').value.split(',');
+  document.getElementById('url-wt').textContent =
+    `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true`;
+}
+function callWeather() {
+  const [lat, lon] = document.getElementById('sel-wt').value.split(',');
+  const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true`;
+  document.getElementById('url-wt').textContent = url;
+  callApi('wt', url);
+}
+function updateJpUrl() {
+  const v = Math.max(1, Math.min(10, parseInt(document.getElementById('inp-jp').value) || 1));
+  document.getElementById('url-jp').textContent = `https://jsonplaceholder.typicode.com/users/${v}`;
+}
+function callUser() {
+  const v = Math.max(1, Math.min(10, parseInt(document.getElementById('inp-jp').value) || 1));
+  document.getElementById('url-jp').textContent = `https://jsonplaceholder.typicode.com/users/${v}`;
+  callApi('jp', `https://jsonplaceholder.typicode.com/users/${v}`);
+}
+
+async function callApi(id, url) {
+  const btn = document.getElementById('btn-' + id);
+  const res = document.getElementById('res-' + id);
+  btn.disabled    = true;
+  btn.textContent = '⏳';
+  res.classList.add('show');
+  res.style.color = 'var(--text-d)';
+  res.textContent = 'Загрузка...';
+  try {
+    const r    = await fetch(url);
+    const data = await r.json();
+    const txt  = JSON.stringify(data, null, 2);
+    const lines = txt.split('\n');
+    res.innerHTML = lines.slice(0, 30).map(colorLine).join('\n');
+    if (lines.length > 30) res.innerHTML += `\n<span style="color:var(--text-d)">... ещё ${lines.length - 30} строк</span>`;
+    res.style.color = '';
+    btn.textContent = '🔄 Ещё раз';
+  } catch(e) {
+    res.innerHTML = `<span style="color:var(--red)">❌ Ошибка: ${e.message}</span>`;
+    btn.textContent = '▶ Запрос';
+  }
+  btn.disabled = false;
+}
+function colorLine(line) {
+  return line
+    .replace(/"([^"]+)":/g, '<span style="color:#80cbc4">"$1":</span>')
+    .replace(/: "([^"]*)"/g, ': <span style="color:#a5d6a7">"$1"</span>')
+    .replace(/: (\d+\.?\d*)(,?)$/g, ': <span style="color:#f9a825">$1</span>$2')
+    .replace(/: (true|false|null)/g, ': <span style="color:#ff7b72">$1</span>');
+}
+
+/* ══════════════════════════════════════════════
+   CONFETTI
+   ══════════════════════════════════════════════ */
+function launchConfetti() {
+  const colors = ['#3b82f6','#10b981','#8b5cf6','#f59e0b','#06b6d4'];
+  for (let i = 0; i < 60; i++) {
+    setTimeout(() => {
+      const el = document.createElement('div');
+      el.className = 'confetti';
+      el.style.cssText = `left:${Math.random()*100}vw;top:0;width:8px;height:${6+Math.random()*6}px;
+        background:${colors[Math.floor(Math.random()*colors.length)]};position:fixed;z-index:201;
+        animation-duration:${1.5+Math.random()*2}s;animation-delay:${Math.random()*.3}s`;
+      document.body.appendChild(el);
+      setTimeout(() => el.remove(), 4000);
+    }, i * 30);
+  }
+}
+
+// Save progress
+localStorage.setItem('theoryDone', '1');
+</script>
+</body>
+</html>
